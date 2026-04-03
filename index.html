@@ -96,6 +96,9 @@
         <input type="file" id="bgUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
       </div>
       <button onclick="toggleSettings()" class="mt-8 w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase">Save & Exit</button>
+      <button onclick="restoreDefaults()" class="w-full py-3 mt-2 bg-rose-500/10 text-rose-500 rounded-2xl text-[9px] font-black uppercase border border-rose-500/20 active:scale-95 transition-all">
+    Restore Defaults ↺
+</button>
     </div>
   </div>
 
@@ -417,6 +420,27 @@ window.handleImageUpload = (e) => { const r = new FileReader(); r.onload = (ev) 
 function loadSavedTheme() { const t = localStorage.getItem('p_bg'); const m = localStorage.getItem('p_mode') || 'dark'; const o = localStorage.getItem('p_op') || 0.8; updateOpacity(o); if (t) setBg(t, m); else setBg("url('assets/bg.webp')", 'dark'); }
 window.startPress = () => { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; const display = document.getElementById('c'); if(display) display.value = ""; if(navigator.vibrate) navigator.vibrate(50); }, 600); };
 window.endPress = (k) => { clearTimeout(pressTimer); if(!isLongPress) { handleKey(k); } };
+window.restoreDefaults = () => {
+    if (confirm("Reset UI to default settings?")) {
+        // 1. Burahin ang mga saved settings sa browser
+        localStorage.removeItem('p_bg');
+        localStorage.removeItem('p_mode');
+        localStorage.removeItem('p_op');
+        
+        // 2. I-reset ang glass opacity slider value (kung gusto mo)
+        const slider = document.querySelector('input[type="range"]');
+        if(slider) slider.value = 0.80;
+        
+        // 3. Patakbuhin ulit ang default loader
+        loadSavedTheme();
+        
+        // 4. Isara ang modal para makita ang pagbabago
+        toggleSettings();
+        
+        // 5. Optional: Mag-vibrate o mag-alert
+        if(navigator.vibrate) navigator.vibrate(100);
+    }
+};
 
 const app = new PowerCon();
     </script>
