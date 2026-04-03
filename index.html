@@ -414,7 +414,7 @@ window.toggleSettings = () => document.getElementById('settingsModal').classList
 window.updateOpacity = (v) => { document.documentElement.style.setProperty('--glass-opacity', v); localStorage.setItem('p_op', v); };
 window.setBg = (s, mode) => { const b = document.getElementById('bodyBg'); b.style.backgroundImage = s.includes('gradient') || s.includes('url') ? s : 'none'; b.style.backgroundColor = s.includes('gradient') || s.includes('url') ? 'transparent' : s; document.body.className = `h-full ${mode}-mode`; localStorage.setItem('p_bg', s); localStorage.setItem('p_mode', mode); };
 window.handleImageUpload = (e) => { const r = new FileReader(); r.onload = (ev) => setBg(`url(${ev.target.result})`, 'dark'); r.readAsDataURL(e.target.files[0]); };
-function loadSavedTheme() { const t = localStorage.getItem('p_bg'); const m = localStorage.getItem('p_mode') || 'dark'; const o = localStorage.getItem('p_op') || 0.8; updateOpacity(o); if (t) setBg(t, m); else setBg("url('assets/bg.jpg')", 'dark'); }
+function loadSavedTheme() { const t = localStorage.getItem('p_bg'); const m = localStorage.getItem('p_mode') || 'dark'; const o = localStorage.getItem('p_op') || 0.8; updateOpacity(o); if (t) setBg(t, m); else setBg("url('assets/bg.webp')", 'dark'); }
 window.startPress = () => { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; const display = document.getElementById('c'); if(display) display.value = ""; if(navigator.vibrate) navigator.vibrate(50); }, 600); };
 window.endPress = (k) => { clearTimeout(pressTimer); if(!isLongPress) { handleKey(k); } };
 
