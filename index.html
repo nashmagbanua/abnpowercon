@@ -221,7 +221,7 @@ class PowerCon {
       <h2 class="text-xl font-black mb-4 truncate">${eq.name}</h2>
       <div class="space-y-2 mb-4">
         <div class="glass-card p-3 rounded-xl flex justify-between items-center"><span class="text-[9px] font-black uppercase opacity-50">Prev Reading</span><input type="text" id="p" value="${autoPrev}" class="bg-transparent text-right font-bold outline-none w-1/2" ${this.state.isSingleEdit ? '' : 'readonly'}></div>
-        <div class="glass-card p-5 rounded-[1.5rem] border-2 border-emerald-500 shadow-xl"><label class="text-[8px] font-black uppercase block text-center mb-1 opacity-60">Current Input</label><input type="text" id="c" class="w-full bg-transparent text-4xl font-black text-center text-emerald-600 outline-none" placeholder="0.000" readonly></div>
+        <div class="glass-card p-5 rounded-[1.5rem] border-2 border-emerald-500 shadow-xl"><label class="text-[8px] font-black uppercase block text-center mb-1 opacity-60">Current Input</label><input type="text" id="c" class="w-full bg-transparent text-4xl font-black text-center outline-none" placeholder="0.000" readonly></div>
       </div>
       <div class="grid grid-cols-3 gap-2 mb-4">
         ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫'].map(k => {
@@ -399,43 +399,36 @@ window.handleKey = (k) => {
     const p = document.getElementById('p'); 
     if(!c || !p) return;
 
-    // 1. Basic Keypad Logic
+    // 1. KEYPAD LOGIC (PAG-TYPE)
     if (k === '⌫') {
         c.value = c.value.slice(0, -1);
     } else if (k === '.') {
         if (!c.value.includes('.')) c.value += '.';
     } else { 
+        // Limit to 4 decimal places para hindi mag-overflow sa screen
         if (c.value.includes('.') && c.value.split('.')[1].length >= 4) return; 
         c.value += k; 
     }
 
-    // 2. SMART LOGIC
+    // 2. ERROR DETECTION LOGIC
     const currentVal = parseFloat(c.value) || 0;
     const prevVal = parseFloat(p.value) || 0;
 
-    // Para swabe ang pagpalit ng glow, lagyan natin ng transition style
-    c.style.transition = "all 0.3s ease";
-
-    // 3. VISUAL FEEDBACK WITH GLOW EFFECT
+    // 3. DIRECT COLOR FEEDBACK (Mismong Numero)
     if (c.value === "") {
-        // DEFAULT STATE
-        c.style.color = "#10b981"; 
-        c.style.textShadow = "none";
+        c.style.color = "white"; // Neutral kapag walang tinatype
     } else if (currentVal < prevVal) {
-        // MALI: ERROR RED GLOW
+        // ERROR: Mas mababa sa previous reading (RED)
         c.style.color = "#ef4444"; 
-        c.style.textShadow = "0 0 12px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.2)";
-    } else if (currentVal > prevVal + 1000000) {
-        // TYPO: WARNING ORANGE GLOW
+    } else if (currentVal > prevVal + 2000000) { 
+        // TYPO: Sobrang laki ng jump (ORANGE) 
+        // Pwede mong i-adjust ang 2M base sa max consumption niyo
         c.style.color = "#f59e0b";
-        c.style.textShadow = "0 0 12px rgba(245, 158, 11, 0.6), 0 0 25px rgba(245, 158, 11, 0.2)";
     } else {
-        // TAMA: SUCCESS EMERALD GLOW
-        c.style.color = "#10b981";
-        c.style.textShadow = "0 0 12px rgba(16, 185, 129, 0.5), 0 0 25px rgba(16, 185, 129, 0.2)";
+        // CORRECT: Normal increase (GREEN)
+        c.style.color = "#10b981"; 
     }
 };
-
 window.enterNext = () => { 
     const c = document.getElementById('c'); 
     const p = document.getElementById('p'); 
