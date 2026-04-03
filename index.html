@@ -303,7 +303,7 @@ class PowerCon {
     
     const data = { id: eq.id, name: eq.name, loc: eq.loc, curr: currentStr, prev: prevStr, usage: usage };
     this.state.sessionReadings[this.state.currentIndex] = data;
-
+    localStorage.setItem('p_last_index', this.state.currentIndex + 1);
     if (this.state.isSingleEdit) {
         await db.ref(`readings/${this.state.filterDate}/${eq.id}`).set(data);
         this.state.isSingleEdit = false; this.state.view = 'records'; 
@@ -345,7 +345,7 @@ class PowerCon {
       <div class="modal-content rounded-[2.5rem] p-8 max-w-xs mx-auto text-center">
         <h3 class="text-lg font-black mb-4">Enter Operator Name</h3>
         <input type="text" id="opNameInput" placeholder="Operator Name" class="w-full p-3 rounded-xl border border-gray-300 mb-4 text-center">
-        
+        <p id="signalStatus" class="text-[8px] font-bold uppercase mb-4 opacity-50 italic transition-all duration-300">Checking signal...</p>
         <div id="recentNamesList" class="flex flex-wrap justify-center gap-2 mb-4"></div>
         
         <button onclick="app.confirmFinalSave()" class="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl mb-2">
@@ -361,20 +361,47 @@ class PowerCon {
 }
 
   // --- REST OF THE METHODS (confirmFinalSave, editFromDashboard, etc.) ---
-  async confirmFinalSave() {
+ async confirmFinalSave() {
+    // --- 1. SIGNAL GUARD ---
+    // Haharangin muna natin dito bago pa man mag-proceed sa opName
+    if (!navigator.onLine) {
+        alert("⚠️ WALANG INTERNET!\n\nHindi mai-save ang data sa database. Maghanap ng signal o kumonekta sa Wi-Fi bago i-click ang Submit.");
+        return; // Stop the process
+    }
+
     const opName = document.getElementById('opNameInput').value.trim().toUpperCase();
     if(!opName) return alert("Enter Operator Name!");
+
+    // --- 2. PREPARE RECENT OPERATORS ---
     let recent = JSON.parse(localStorage.getItem('recentOperators') || '[]'); 
     recent = [opName, ...recent.filter(n => n !== opName)].slice(0, 5); 
     localStorage.setItem('recentOperators', JSON.stringify(recent));
+
+    // --- 3. PREPARE DATA ---
     const updates = {}; 
     this.state.sessionReadings.forEach(r => { if(r) updates[`/readings/${this.state.date}/${r.id}`] = r; });
     updates[`/readings/${this.state.date}/metadata`] = { operator: opName, timestamp: Date.now() };
-    await db.ref().update(updates); 
-    document.getElementById('nameModal').classList.add('hidden');
-    this.state.view = 'records'; this.state.filterDate = this.state.date; 
-    await this.syncWithCloud(this.state.date);
-  }
+
+    // --- 4. ACTUAL SAVING WITH ERROR HANDLING ---
+    try {
+        await db.ref().update(updates); 
+        
+        // Success! Dito na natin lilinisin ang modal at progress
+        document.getElementById('nameModal').classList.add('hidden');
+        this.state.view = 'records'; 
+        this.state.filterDate = this.state.date; 
+        
+        await this.syncWithCloud(this.state.date);
+        
+        // Clear progress ONLY if successfully saved to cloud
+        localStorage.removeItem('p_last_index');
+        
+        alert("✅ LOGSHEET SUBMITTED!");
+    } catch (e) {
+        // Kung nag-error (halimbawa biglang naputol ang net habang nag-u-update)
+        alert("❌ PAG-SAVE FAILED: Check your signal and try again.\n" + e.message);
+    }
+}
 
   openNameModal() {
     const modal = document.getElementById('nameModal'); modal.classList.remove('hidden');
@@ -382,7 +409,36 @@ class PowerCon {
     document.getElementById('recentNamesList').innerHTML = recent.map(name => `<button onclick="document.getElementById('opNameInput').value='${name}'; app.confirmFinalSave()" class="text-[9px] bg-emerald-500/10 text-current px-4 py-2 rounded-xl font-bold uppercase m-1 border border-emerald-500/20">${name}</button>`).join('');
   }
 
-  async start() { await this.syncWithCloud(); this.state.isSingleEdit = false; let firstEmpty = 0; for(let i=0; i<MOCK_EQUIPMENT.length; i++) { if(!this.state.cloudReadings[MOCK_EQUIPMENT[i].id]) { firstEmpty = i; break; } } this.state.currentIndex = firstEmpty; this.state.view = 'reading'; this.render(); }
+ async start() { 
+    await this.syncWithCloud(); 
+    this.state.isSingleEdit = false; 
+
+    // Kunin ang huling index na tinigilan (kung meron)
+    const savedIndex = localStorage.getItem('p_last_index');
+    
+    if (savedIndex && savedIndex < MOCK_EQUIPMENT.length) {
+        const resume = confirm("Resume from where you left off?");
+        if (resume) {
+            this.state.currentIndex = parseInt(savedIndex);
+        } else {
+            this.state.currentIndex = 0;
+            localStorage.removeItem('p_last_index'); // Clear kung ayaw mag-resume
+        }
+    } else {
+        // Kung wala pang nasimulan, hanapin ang unang empty
+        let firstEmpty = 0; 
+        for(let i=0; i<MOCK_EQUIPMENT.length; i++) { 
+            if(!this.state.cloudReadings[MOCK_EQUIPMENT[i].id]) { 
+                firstEmpty = i; 
+                break; 
+            } 
+        } 
+        this.state.currentIndex = firstEmpty;
+    }
+
+    this.state.view = 'reading'; 
+    this.render(); 
+}
   exitReading() { if (this.state.isEditingFromReview) { this.state.isEditingFromReview = false; this.state.view = 'review'; } else { this.state.view = this.state.isSingleEdit ? 'records' : 'home'; } this.state.isSingleEdit = false; this.render(); }
   editFromReview(i) { this.state.currentIndex = i; this.state.isEditingFromReview = true; this.state.view = 'reading'; this.render(); }
   editFromDashboard(id) { const pin = prompt("Admin PIN:"); if (pin === "abnpower") { const index = MOCK_EQUIPMENT.findIndex(e => e.id === id); if (index !== -1) { this.state.isSingleEdit = true; this.state.currentIndex = index; this.state.view = 'reading'; this.render(); } } }
@@ -464,7 +520,21 @@ window.restoreDefaults = () => {
         if(navigator.vibrate) navigator.vibrate(100);
     }
 };
+// Live Signal Monitor for PowerCon
+setInterval(() => {
+    const status = document.getElementById('signalStatus');
+    if(!status) return;
 
+    if(navigator.onLine) {
+        status.innerText = "● ONLINE: READY TO SUBMIT";
+        status.style.color = "#10b981"; // Emerald Green
+        status.style.opacity = "1";
+    } else {
+        status.innerText = "● OFFLINE: FIND BETTER SIGNAL";
+        status.style.color = "#ef4444"; // Red
+        status.style.opacity = "1";
+    }
+}, 2000);
 const app = new PowerCon();
     </script>
 </body>
