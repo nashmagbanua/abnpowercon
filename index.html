@@ -223,14 +223,15 @@ class PowerCon {
         <div class="glass-card p-3 rounded-xl flex justify-between items-center"><span class="text-[9px] font-black uppercase opacity-50">Prev Reading</span><input type="text" id="p" value="${autoPrev}" class="bg-transparent text-right font-bold outline-none w-1/2" ${this.state.isSingleEdit ? '' : 'readonly'}></div>
         <div class="glass-card p-5 rounded-[1.5rem] border-2 border-emerald-500 shadow-xl"><label class="text-[8px] font-black uppercase block text-center mb-1 opacity-60">Current Input</label><input type="text" id="c" class="w-full bg-transparent text-4xl font-black text-center outline-none" placeholder="0.000" readonly></div>
       </div>
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫'].map(k => {
-            if(k === '0') {
-                return `<button class="num-btn" onmousedown="startPress()" onmouseup="endPress('0')" ontouchstart="startPress(); event.preventDefault();" ontouchend="endPress('0'); event.preventDefault();">${k}</button>`;
-            }
-            return `<button class="num-btn" onclick="handleKey('${k}')">${k}</button>`;
-        }).join('')}
-      </div>
+     <div class="glass-card p-3 rounded-2xl mb-4">
+  <div class="grid grid-cols-3 gap-2">
+    ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫'].map(k => {
+        if(k === '0') {
+            return `<button class="num-btn" onmousedown="startPress()" onmouseup="endPress('0')" ontouchstart="startPress(); event.preventDefault();" ontouchend="endPress('0'); event.preventDefault();">${k}</button>`;
+        }
+        return `<button class="num-btn" onclick="handleKey('${k}')">${k}</button>`;
+    }).join('')}
+  </div>
       <div class="grid grid-cols-2 gap-3">
         <button onclick="app.exitReading()" class="py-4 font-bold uppercase text-[10px] opacity-50">Cancel</button>
         <button onclick="window.enterNext()" class="bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase italic text-sm">
@@ -472,7 +473,7 @@ window.handleKey = (k) => {
 
     // 3. DIRECT COLOR FEEDBACK (Mismong Numero)
     if (c.value === "") {
-        c.style.color = "white"; // Neutral kapag walang tinatype
+        c.style.color = ""; // Neutral kapag walang tinatype
     } else if (currentVal < prevVal) {
         // ERROR: Mas mababa sa previous reading (RED)
         c.style.color = "#ef4444"; 
