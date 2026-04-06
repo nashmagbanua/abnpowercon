@@ -11,34 +11,69 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-  <style>
+ <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
-    body { font-family: 'Plus+Jakarta+Sans', sans-serif; background-image: url('assets/bg.webp'); background-size: cover; background-position: center; background-attachment: fixed; transition: all 0.4s ease; margin: 0; }
+    
+    body { 
+        font-family: 'Plus+Jakarta+Sans', sans-serif; 
+        background-image: url('assets/bg.webp'); 
+        background-size: cover; 
+        background-position: center; 
+        background-attachment: fixed; 
+        transition: all 0.4s ease; 
+        margin: 0; 
+    }
+    
     .font-mono-numbers { font-family: 'JetBrains Mono', monospace; }
-    
     .glass-card { transition: all 0.3s ease; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    
-    /* Light Mode */
-    .light-mode { color: #0f172a; }
-    .light-mode .glass-card { background: rgba(255, 255, 255, var(--glass-opacity, 0.8)); border: 1px solid rgba(255, 255, 255, 0.3); }
-    .light-mode .modal-content { background: #ffffff; color: #0f172a; border: 1px solid #e2e8f0; }
 
-    /* Dark Mode */
+    /* --- Light Mode (Para sa Snow, Sky, Rose, Cream) --- */
+    .light-mode { color: #0f172a; }
+    .light-mode .glass-card { 
+        background: rgba(255, 255, 255, var(--glass-opacity, 0.8)); 
+        border: 1px solid rgba(0, 0, 0, 0.05); 
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .light-mode .modal-content { background: #ffffff; color: #0f172a; border: 1px solid #e2e8f0; }
+    
+    /* Auto-fix para sa text na hardcoded na white sa HTML */
+    .light-mode .text-white, 
+    .light-mode .font-white,
+    .light-mode p.text-white { color: #0f172a !important; }
+    
+    /* Keypad sa Light Mode */
+    .light-mode .num-btn { background: rgba(0,0,0,0.06); color: #0f172a; border: 1px solid rgba(0,0,0,0.03); }
+
+    /* --- Dark Mode (Para sa Night, Forest, Ruby, Earth) --- */
     .dark-mode { color: #ffffff; }
-    .dark-mode .glass-card { background: rgba(0, 0, 0, var(--glass-opacity, 0.5)) !important; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .dark-mode .glass-card { 
+        background: rgba(0, 0, 0, var(--glass-opacity, 0.5)) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+    }
     .dark-mode .modal-content { background: #0f172a; color: #ffffff; border: 1px solid #1e293b; }
     .dark-mode .text-emerald-600 { color: #34d399 !important; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3); }
     .dark-mode input { color: white; }
+    
+    /* Keypad sa Dark Mode */
+    .dark-mode .num-btn { background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.05); }
 
-    .num-btn { height: 55px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; border-radius: 1rem; transition: all 0.1s; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-    .light-mode .num-btn { background: rgba(0,0,0,0.05); color: #0f172a; }
-    .dark-mode .num-btn { background: rgba(255,255,255,0.1); color: #ffffff; }
+    /* --- Keypad & Modals --- */
+    .num-btn { 
+        height: 55px; display: flex; align-items: center; justify-content: center; 
+        font-size: 1.25rem; font-weight: 800; border-radius: 1rem; 
+        transition: all 0.1s; cursor: pointer; user-select: none; 
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation; 
+    }
     .num-btn:active, .num-btn.active-key { background: #10b981 !important; color: white !important; transform: scale(0.95); }
     
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1.5rem; }
+    .modal { 
+        position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+        backdrop-filter: blur(10px); display: flex; align-items: center; 
+        justify-content: center; z-index: 9999; padding: 1.5rem; 
+    }
     .hidden { display: none !important; }
     .theme-preview { height: 35px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); }
-  </style>
+</style>
 </head>
 <body id="bodyBg" class="h-full light-mode">
 
