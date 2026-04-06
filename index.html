@@ -558,7 +558,7 @@ window.enterNext = () => {
 };
 
 window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('hidden');
-window.updateOpacity = (v) => { document.documentElement.style.setProperty('--glass-opacity', v); localStorage.setItem('p_op', v); };
+window.updateOpacity = (v) => { document.documentElement.style.setProperty('--glass-opacity', v); localStorage.setItem('p_opacity', v); };
 window.setBg = (val, mode) => { 
     const b = document.getElementById('bodyBg');
     
@@ -596,23 +596,26 @@ window.startPress = () => { isLongPress = false; pressTimer = setTimeout(() => {
 window.endPress = (k) => { clearTimeout(pressTimer); if(!isLongPress) { handleKey(k); } };
 window.restoreDefaults = () => {
     if (confirm("Reset UI to default settings?")) {
-        // 1. Burahin ang mga saved settings sa browser
-        localStorage.removeItem('p_bg');
-        localStorage.removeItem('p_mode');
-        localStorage.removeItem('p_op');
+        // 1. Burahin ang TAMANG keys na ginagamit sa loadSavedTheme
+        localStorage.removeItem('p_theme_val');
+        localStorage.removeItem('p_theme_mode');
+        localStorage.removeItem('p_opacity');
         
-        // 2. I-reset ang glass opacity slider value (kung gusto mo)
+        // 2. I-reset ang slider visual value
         const slider = document.querySelector('input[type="range"]');
         if(slider) slider.value = 0.80;
         
-        // 3. Patakbuhin ulit ang default loader
-        loadSavedTheme();
+        // 3. I-apply ang default values manually para makita agad ang pagbabago
+        // Default values: bg.webp, light mode, 0.80 opacity
+        window.setBg('assets/bg.webp', 'light');
+        window.updateOpacity('0.80');
         
-        // 4. Isara ang modal para makita ang pagbabago
+        // 4. Isara ang modal
         toggleSettings();
         
-        // 5. Optional: Mag-vibrate o mag-alert
-        if(navigator.vibrate) navigator.vibrate(100);
+        // 5. Feedback
+        if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        console.log("UI Restored to Defaults");
     }
 };
 // Live Signal Monitor for PowerCon
