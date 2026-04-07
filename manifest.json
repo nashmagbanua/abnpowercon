@@ -24,7 +24,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "assets/abnlogo.svg",
+      "src": "assets/launchericon-512x512.png",
       "sizes": "1024x1024",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -36,3 +36,5 @@
     "minimal-ui"
   ]
 }
+
+
