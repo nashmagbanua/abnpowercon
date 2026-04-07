@@ -1,12 +1,15 @@
 {
-  "name": "ABN PowerCon Utilities",
+  "name": "ABN PowerCon",
   "short_name": "PowerCon",
-  "description": "Industrial Power Consumption Tracking for Nutribev Corp",
-  "start_url": "index.html",
+  "description": "Industrial Utility Monitoring for Nutribev Corp",
+  "lang": "en",
+  "dir": "ltr",
   "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/index.html",
+  "scope": "/",
   "background_color": "#0f172a",
   "theme_color": "#10b981",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "assets/abnlogo.svg",
@@ -19,12 +22,17 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
+    },
     {
       "src": "assets/abnlogo.svg",
       "sizes": "1024x1024",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "display_override": [
+    "standalone",
+    "window-controls-overlay",
+    "minimal-ui"
   ]
 }
