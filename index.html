@@ -78,6 +78,622 @@
     }
     .hidden { display: none !important; }
     .theme-preview { height: 35px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); }
+    
+    /* =========================================================
+   POWERCON MOBILE READING OPTIMIZATION
+   UI ONLY — NO READING LOGIC CHANGES
+   ========================================================= */
+
+.powercon-equipment-card {
+    width: 100%;
+    text-align: center;
+    padding: 0.9rem 0.75rem;
+    border-radius: 1.25rem;
+    margin-bottom: 1rem;
+
+    overflow: visible;
+
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.powercon-equipment-name {
+    font-size: clamp(1rem, 4.8vw, 1.35rem);
+    line-height: 1.2;
+    font-weight: 800;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+}
+
+.powercon-reading-label {
+    font-size: clamp(0.62rem, 2.4vw, 0.75rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.powercon-reading-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1.15rem, 5.8vw, 1.7rem);
+    line-height: 1.15;
+    font-weight: 800;
+
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.powercon-current-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(2.25rem, 12vw, 3.8rem);
+    line-height: 1;
+    font-weight: 800;
+
+    width: 100%;
+    min-width: 0;
+
+    text-align: center;
+
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: none;
+}
+
+.powercon-current-input::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =========================================================
+   RECORDS / LOGSHEET
+   ========================================================= */
+
+.powercon-record-card {
+    width: 100%;
+    min-width: 0;
+
+    /*
+      IMPORTANT:
+      Huwag putulin ang mahahabang readings.
+    */
+    overflow: visible;
+}
+
+/* =========================================================
+   LOGSHEET EQUIPMENT LABEL
+   Green badge + LOCATION always below
+   ========================================================= */
+
+.powercon-record-equipment {
+    display: block;
+
+    width: fit-content;
+    max-width: 100%;
+
+    margin: 0 auto;
+
+    padding: 0.45rem 0.85rem;
+
+    border-radius: 0.7rem;
+
+    background: linear-gradient(
+        135deg,
+        #047857 0%,
+        #10b981 50%,
+        #059669 100%
+    );
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    color: #ffffff !important;
+
+    font-size: clamp(0.72rem, 3.2vw, 0.9rem);
+    line-height: 1.25;
+
+    font-weight: 900;
+
+    text-align: center;
+    text-transform: uppercase;
+
+    letter-spacing: 0.02em;
+
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35);
+
+    box-shadow:
+        0 4px 14px rgba(16, 185, 129, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+
+/* =========================================================
+   LOCATION
+   UTILITIES / PROCESS / BOTTLING
+   Always below equipment badge
+   ========================================================= */
+
+.powercon-record-equipment + span {
+    display: block !important;
+
+    width: 100%;
+
+    margin-top: 1px !important;
+
+    text-align: center;
+
+    line-height: 1.1;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   READING GRID
+   ========================================================= */
+
+.powercon-record-grid {
+    display: grid;
+
+    /*
+      CURRENT gets slightly more room.
+      Mas safe ito sa mahahabang decimal values.
+    */
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1.25fr)
+        minmax(0, 0.95fr);
+
+    width: 100%;
+
+    gap: clamp(0.25rem, 1.8vw, 0.7rem);
+
+    align-items: center;
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   READING CELL
+   ========================================================= */
+
+.powercon-record-cell {
+    min-width: 0;
+
+    text-align: center;
+
+    padding:
+        clamp(0.5rem, 2.5vw, 0.8rem)
+        0.15rem;
+
+    border-radius: 0.9rem;
+
+    /*
+      IMPORTANT:
+      Ito ang dating nagpuputol ng long numbers.
+    */
+    overflow: visible;
+}
+
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.powercon-record-label {
+    display: block;
+
+    width: 100%;
+
+    font-size: clamp(0.55rem, 2.2vw, 0.7rem);
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.03em;
+
+    white-space: nowrap;
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   READING VALUE
+   ========================================================= */
+
+.powercon-record-value {
+    display: block;
+
+    width: 100%;
+
+    margin-top: 0.35rem;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    /*
+      Responsive size.
+      Mahabang number = mas compact sa small screen.
+    */
+    font-size: clamp(
+        0.68rem,
+        4vw,
+        1.15rem
+    );
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    overflow: visible;
+
+    text-overflow: clip;
+
+    letter-spacing: -0.055em;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   CURRENT READING HIGHLIGHT
+   ========================================================= */
+
+.powercon-record-current {
+    background: rgba(16, 185, 129, 0.10);
+
+    border: 1px solid rgba(16, 185, 129, 0.25);
+
+    color: #10b981;
+
+    box-shadow:
+        0 3px 12px rgba(16, 185, 129, 0.08);
+}
+
+
+/* =========================================================
+   TOTAL = 0
+   ========================================================= */
+
+.powercon-record-total-zero {
+    font-family: 'JetBrains Mono', monospace;
+
+    font-weight: 900;
+
+    /*
+      Kapag zero:
+      0
+      instead of:
+      0.000
+    */
+}
+
+
+/* =========================================================
+   VERY SMALL ANDROID
+   ========================================================= */
+
+@media (max-width: 350px) {
+
+    .powercon-record-grid {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1.25fr)
+            minmax(0, 0.95fr);
+
+        gap: 0.15rem;
+    }
+
+    .powercon-record-cell {
+        padding-left: 0.05rem;
+        padding-right: 0.05rem;
+    }
+
+    .powercon-record-value {
+        font-size: 0.62rem;
+        letter-spacing: -0.07em;
+    }
+
+    .powercon-record-label {
+        font-size: 0.48rem;
+    }
+}
+
+
+/* =========================================================
+   NORMAL PHONES
+   ========================================================= */
+
+@media (min-width: 351px) and (max-width: 430px) {
+
+    .powercon-record-value {
+        font-size: clamp(
+            0.68rem,
+            3.8vw,
+            1rem
+        );
+
+        letter-spacing: -0.06em;
+    }
+}
+
+
+/* =========================================================
+   LARGE PHONES
+   Samsung / iPhone Pro Max / etc.
+   ========================================================= */
+
+@media (min-width: 431px) {
+
+    .powercon-record-grid {
+        gap: 0.65rem;
+    }
+
+    .powercon-record-value {
+        font-size: 1.15rem;
+
+        letter-spacing: -0.04em;
+    }
+}
+
+
+/* =========================================================
+   TABLET / DESKTOP
+   ========================================================= */
+
+@media (min-width: 640px) {
+
+    .powercon-reading-number {
+        font-size: 1.8rem;
+    }
+
+    .powercon-current-input {
+        font-size: 3.5rem;
+    }
+
+    .powercon-record-value {
+        font-size: 1.2rem;
+
+        letter-spacing: -0.035em;
+    }
+}
+     /* =========================================================
+   POWERCON EQUIPMENT LABEL
+   Isolated from UI Theme Settings
+   ========================================================= */
+
+.powercon-equipment-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    max-width: 100%;
+
+    padding: 0.65rem 1rem;
+    border-radius: 0.9rem;
+
+    background: linear-gradient(
+        135deg,
+        #047857 0%,
+        #10b981 50%,
+        #059669 100%
+    );
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    box-shadow:
+        0 6px 18px rgba(16, 185, 129, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.20);
+
+    color: #ffffff !important;
+
+    font-size: clamp(0.95rem, 4.2vw, 1.25rem);
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+
+    text-align: center;
+    text-transform: uppercase;
+
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35);
+
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+/* =========================================================
+   LOGSHEET COPY FOCUS
+   Clicked equipment becomes clearly visible
+   ========================================================= */
+
+.powercon-record-card {
+    position: relative;
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.25s ease,
+        opacity 0.25s ease,
+        border-color 0.25s ease;
+}
+
+/* Normal cards become slightly quieter */
+.powercon-record-card.powercon-unfocused {
+    opacity: 0.55;
+}
+
+/* Selected card */
+.powercon-record-card.powercon-focused {
+    opacity: 1 !important;
+
+    transform: scale(1.015);
+
+    border: 2px solid #10b981 !important;
+
+    box-shadow:
+        0 0 0 3px rgba(16, 185, 129, 0.18),
+        0 12px 35px rgba(16, 185, 129, 0.22);
+
+    z-index: 5;
+}
+
+/* Small FOCUS indicator */
+.powercon-focus-indicator {
+    display: none;
+}
+
+.powercon-record-card.powercon-focused .powercon-focus-indicator {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+
+    width: 1.5rem;
+    height: 1.5rem;
+
+    border-radius: 999px;
+
+    background: #10b981;
+    color: white;
+
+    font-size: 0.75rem;
+    font-weight: 900;
+
+    box-shadow:
+        0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+/* Mobile: avoid excessive scaling */
+@media (max-width: 480px) {
+    .powercon-record-card.powercon-focused {
+        transform: scale(1.01);
+    }
+}
+     /* =========================================================
+   POWERCON ACTION BUTTONS
+   ========================================================= */
+
+.powercon-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 52px;
+    padding: 0.85rem 0.75rem;
+
+    font-size: clamp(0.68rem, 3vw, 0.82rem);
+    line-height: 1.15;
+
+    font-weight: 900;
+    letter-spacing: 0.025em;
+
+    text-align: center;
+    white-space: nowrap;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+
+    -webkit-font-smoothing: antialiased;
+
+    transition:
+        transform 0.15s ease,
+        filter 0.15s ease;
+}
+
+.powercon-action-btn:active {
+    transform: scale(0.96);
+}
+     .powercon-action-btn.powercon-download-btn {
+    color: #ffffff !important;
+    background: #0f172a !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+@media (max-width: 350px) {
+    .powercon-action-btn {
+        min-height: 50px;
+        padding-left: 0.45rem;
+        padding-right: 0.45rem;
+        font-size: 0.62rem;
+        letter-spacing: 0.015em;
+    }
+}
+
+@media (min-width: 351px) and (max-width: 430px) {
+    .powercon-action-btn {
+        font-size: 0.7rem;
+    }
+}
+
+@media (min-width: 431px) {
+    .powercon-action-btn {
+        font-size: 0.78rem;
+    }
+}
+     /* =========================================================
+   HOME — VIEW LOGSHEETS BUTTON
+   Default = WHITE + BLACK TEXT
+   Isolated from other UI components
+   ========================================================= */
+
+.powercon-view-logsheet-btn {
+    background: #ffffff;
+    color: #0f172a !important;
+
+    border: 1px solid rgba(15, 23, 42, 0.08);
+
+    box-shadow:
+        0 4px 14px rgba(15, 23, 42, 0.10);
+
+    text-shadow: none;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+.powercon-view-logsheet-btn:hover {
+    background: #f8fafc;
+}
+
+.powercon-view-logsheet-btn:active {
+    transform: scale(0.98);
+}
+     
+/* =========================================================
+   POWERCON HOME — CENTERED CONTROLS
+   ========================================================= */
+
+.powercon-home-controls {
+    width: 100%;
+    max-width: 360px;
+
+    margin: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+}
+
+/* Keep every control full width */
+.powercon-home-controls > * {
+    width: 100%;
+}
 </style>
 </head>
 <body id="bodyBg" class="h-full light-mode">
@@ -210,6 +826,16 @@ function animateKey(k) {
     if(btn) { btn.classList.add('active-key'); setTimeout(() => btn.classList.remove('active-key'), 100); }
 }
 
+const formatUsageDisplay = (value) => {
+    const num = parseFloat(value);
+
+    if (!Number.isFinite(num) || num === 0) {
+        return '0';
+    }
+
+    return String(value);
+};
+
 class PowerCon {
   constructor() {
     this.state = { view: 'home', currentIndex: 0, date: getLocalDate(new Date()), filterDate: getLocalDate(new Date()), sessionReadings: [], cloudReadings: {}, yesterdayReadings: {}, loading: false, isSingleEdit: false, isEditingFromReview: false};
@@ -254,109 +880,547 @@ homeHTML() {
         </div>
     </header>
 
-    <main class="flex-grow flex flex-col justify-center p-8 max-w-sm mx-auto w-full">
-        <div class="glass-card rounded-[2.5rem] p-6 mb-4 border border-white/20 shadow-xl bg-white/30">
-            <label class="text-[9px] font-black uppercase mb-3 block tracking-widest opacity-60 text-center">Reading Date</label>
-            <input type="date" value="${this.state.date}" 
-                class="w-full bg-white/50 border-2 border-emerald-500/20 p-4 rounded-2xl font-bold text-center outline-none focus:border-emerald-500 transition-all text-current" 
-                onchange="app.state.date=this.value; app.syncWithCloud()">
+   <main class="flex-grow flex flex-col p-8 max-w-sm mx-auto w-full">
+
+    <!-- =====================================================
+         CENTERED POWERCON CONTROLS
+         Calendar + Start Reading + View Logsheets
+         ===================================================== -->
+    <div class="powercon-home-controls">
+
+        <!-- READING DATE -->
+        <div class="glass-card rounded-[2.5rem] p-6 mb-4
+                    border border-white/20 shadow-xl bg-white/30">
+
+            <label
+                class="text-[9px] font-black uppercase mb-3 block
+                       tracking-widest opacity-60 text-center"
+            >
+                Reading Date
+            </label>
+
+            <input
+                type="date"
+                value="${this.state.date}"
+                class="w-full bg-white/50 border-2
+                       border-emerald-500/20 p-4 rounded-2xl
+                       font-bold text-center outline-none
+                       focus:border-emerald-500 transition-all
+                       text-current"
+                onchange="app.state.date=this.value; app.syncWithCloud()"
+            >
+
         </div>
 
-        <button onclick="app.start()" 
-            class="w-full bg-emerald-600 text-white font-black py-6 rounded-[2rem] shadow-lg shadow-emerald-500/20 text-xl mb-3 active:scale-95 transition-all">
+        <!-- START READING -->
+        <button
+            onclick="app.start()"
+            class="w-full bg-emerald-600 text-white
+                   font-black py-6 rounded-[2rem]
+                   shadow-lg shadow-emerald-500/20
+                   text-xl mb-3
+                   active:scale-95 transition-all"
+        >
             START READING
         </button>
 
-        <button onclick="app.state.view='records';app.state.filterDate=app.state.date;app.syncWithCloud(app.state.date)" 
-            class="w-full bg-slate-900/80 backdrop-blur-sm text-white font-bold py-5 rounded-[2rem] text-xs uppercase tracking-widest active:scale-95 transition-all mb-12 border border-white/10">
+        <!-- VIEW LOGSHEETS -->
+        <button
+            onclick="app.state.view='records';app.state.filterDate=app.state.date;app.syncWithCloud(app.state.date)"
+            class="powercon-view-logsheet-btn w-full
+                   font-bold py-5 rounded-[2rem]
+                   text-xs uppercase tracking-widest
+                   active:scale-95 transition-all"
+        >
             VIEW LOGSHEETS
         </button>
 
-        <p class="text-[8px] font-bold opacity-30 uppercase tracking-widest text-center mt-auto pb-4">
-            © ${new Date().getFullYear()} Nutribev Corporation
-        </p>
-    </main>
+    </div>
+
+    <!-- COPYRIGHT -->
+    <p
+        class="text-[8px] font-bold opacity-30
+               uppercase tracking-widest
+               text-center mt-auto pb-4"
+    >
+        © ${new Date().getFullYear()} Nutribev Corporation
+    </p>
+
+</main>
 </div>`;}
+
   readingHTML() {
     const eq = MOCK_EQUIPMENT[this.state.currentIndex];
-    const progress = ((this.state.currentIndex + 1) / MOCK_EQUIPMENT.length) * 100;
-    // Panatilihin ang string format para hindi mawala ang decimal zeros
-    let autoPrev = (this.state.yesterdayReadings && this.state.yesterdayReadings[eq.id]) ? this.state.yesterdayReadings[eq.id].curr : '0.000';
-    
-    return `<div class="p-4 max-w-xl mx-auto min-h-screen flex flex-col">
-      <div class="w-full h-1.5 bg-emerald-900/10 rounded-full mb-4 overflow-hidden"><div class="h-full bg-emerald-500 transition-all" style="width:${progress}%"></div></div>
-      <div class="flex justify-between items-center mb-1"><span class="text-[9px] font-black bg-emerald-600 text-white px-3 py-1 rounded-lg uppercase">${eq.loc}</span><span class="text-xs font-bold font-mono-numbers opacity-50">${this.state.currentIndex+1}/${MOCK_EQUIPMENT.length}</span></div>
-      <h2 class="text-xl font-black mb-4 truncate">${eq.name}</h2>
-      <div class="space-y-2 mb-4">
-        <div class="glass-card p-3 rounded-xl flex justify-between items-center"><span class="text-[9px] font-black uppercase opacity-50">Prev Reading</span><input type="text" id="p" value="${autoPrev}" class="bg-transparent text-right font-bold outline-none w-1/2" ${this.state.isSingleEdit ? '' : 'readonly'}></div>
-        <div class="glass-card p-5 rounded-[1.5rem] border-2 border-emerald-500 shadow-xl"><label class="text-[8px] font-black uppercase block text-center mb-1 opacity-60">Current Input</label><input type="text" id="c" class="w-full bg-transparent text-4xl font-black text-center outline-none" placeholder="0.000" readonly></div>
-      </div>
-     <div class="glass-card p-3 rounded-2xl mb-4">
-  <div class="grid grid-cols-3 gap-2">
-    ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫'].map(k => {
-        if(k === '0') {
-            return `<button class="num-btn" onmousedown="startPress()" onmouseup="endPress('0')" ontouchstart="startPress(); event.preventDefault();" ontouchend="endPress('0'); event.preventDefault();">${k}</button>`;
-        }
-        return `<button class="num-btn" onclick="handleKey('${k}')">${k}</button>`;
-    }).join('')}
-  </div>
-   </div>
-      <div class="grid grid-cols-2 gap-3">
-        <button onclick="app.exitReading()" class="py-4 font-bold uppercase text-[10px] opacity-50">Cancel</button>
-        <button onclick="window.enterNext()" class="bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase italic text-sm">
-            ${this.state.isEditingFromReview || this.state.isSingleEdit ? 'UPDATE READING ✓' : 'Submit & Next ➔'}
-        </button>
-      </div>
+
+    const progress =
+        ((this.state.currentIndex + 1) / MOCK_EQUIPMENT.length) * 100;
+
+    // =====================================================
+    // EXISTING LOGIC — HINDI BINAGO
+    // Previous reading comes from yesterday's current
+    // =====================================================
+
+    let autoPrev =
+        (this.state.yesterdayReadings &&
+         this.state.yesterdayReadings[eq.id])
+            ? this.state.yesterdayReadings[eq.id].curr
+            : '0.000';
+
+    return `
+    <div class="p-3 sm:p-4 max-w-xl mx-auto min-h-screen flex flex-col">
+
+        <!-- PROGRESS -->
+        <div class="w-full h-1.5 bg-emerald-900/10 rounded-full mb-4 overflow-hidden">
+            <div
+                class="h-full bg-emerald-500 transition-all duration-300"
+                style="width:${progress}%"
+            ></div>
+        </div>
+
+      <!-- =================================================
+     PROGRESS NUMBER
+     ================================================= -->
+<div class="flex items-center justify-end mb-3">
+
+    <span class="text-xs font-bold font-mono-numbers opacity-50">
+        ${this.state.currentIndex + 1}/${MOCK_EQUIPMENT.length}
+    </span>
+
+</div>
+
+<!-- =================================================
+     EQUIPMENT — CENTERED / PROMINENT / HIGHLIGHTED
+     ================================================= -->
+<div class="powercon-equipment-badge mb-3">
+    ${eq.name}
+</div>
+
+<div class="text-center text-[8px] sm:text-[9px]
+            font-black uppercase tracking-widest
+            opacity-50 mb-4">
+    ${eq.loc}
+</div>
+
+        <!-- =================================================
+             PREVIOUS READING
+             ================================================= -->
+        <div class="glass-card p-4 sm:p-5 rounded-2xl mb-3 text-center border border-white/10">
+
+            <div class="powercon-reading-label opacity-50 mb-2">
+                Previous Reading
+            </div>
+
+            <div class="powercon-reading-number">
+                ${autoPrev}
+            </div>
+
+        </div>
+
+        <!-- =================================================
+             CURRENT INPUT — HIGHLIGHTED
+             ================================================= -->
+        <div
+            class="glass-card p-4 sm:p-6 rounded-[1.5rem] mb-4
+                   border-2 border-emerald-500
+                   shadow-xl shadow-emerald-500/10
+                   bg-emerald-500/5"
+        >
+
+            <label class="powercon-reading-label block text-center text-emerald-500 mb-3">
+                Current Input
+            </label>
+
+            <input
+                type="text"
+                id="c"
+                class="powercon-current-input bg-transparent outline-none"
+                placeholder="0.000"
+                readonly
+                inputmode="decimal"
+                autocomplete="off"
+            >
+
+        </div>
+
+        <!-- =================================================
+             KEYPAD
+             ================================================= -->
+        <div class="glass-card p-3 rounded-2xl mb-4">
+
+            <div class="grid grid-cols-3 gap-2">
+
+                ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫']
+                    .map(k => {
+
+                        if (k === '0') {
+                            return `
+                            <button
+                                class="num-btn"
+                                onmousedown="startPress()"
+                                onmouseup="endPress('0')"
+                                ontouchstart="startPress(); event.preventDefault();"
+                                ontouchend="endPress('0'); event.preventDefault();"
+                            >
+                                ${k}
+                            </button>
+                            `;
+                        }
+
+                        return `
+                        <button
+                            class="num-btn"
+                            onclick="handleKey('${k}')"
+                        >
+                            ${k}
+                        </button>
+                        `;
+
+                    }).join('')}
+
+            </div>
+
+        </div>
+
+        <!-- =================================================
+             ACTION BUTTONS
+             ================================================= -->
+        <div class="grid grid-cols-2 gap-3 pb-4">
+
+            <button
+                onclick="app.exitReading()"
+                class="py-4 font-bold uppercase text-[10px] opacity-50 active:scale-95 transition-all"
+            >
+                Cancel
+            </button>
+
+            <button
+                onclick="window.enterNext()"
+                class="bg-emerald-600 text-white font-black py-4 rounded-2xl
+                       shadow-lg uppercase italic text-sm
+                       active:scale-[0.98] transition-all"
+            >
+                ${this.state.isEditingFromReview || this.state.isSingleEdit
+                    ? 'UPDATE READING ✓'
+                    : 'Submit & Next ➔'}
+            </button>
+
+        </div>
+
     </div>`;
-  }
+}
 
   recordsHTML() {
     let grandTotal = 0;
+
     MOCK_EQUIPMENT.forEach(eq => {
-      const r = this.state.cloudReadings[eq.id];
-      if (r && r.usage) grandTotal += parseFloat(r.usage);
+        const r = this.state.cloudReadings[eq.id];
+
+        if (r && r.usage) {
+            grandTotal += parseFloat(r.usage) || 0;
+        }
     });
 
     const meta = this.state.cloudReadings['metadata'] || {};
-    const defaultColors = { "UTILITIES": "#ef4444", "PROCESS": "#3b82f6", "BOTTLING": "#f59e0b", "LVSG 5 LOADS": "#10b981" };
+
+    const defaultColors = {
+        "UTILITIES": "#ef4444",
+        "PROCESS": "#3b82f6",
+        "BOTTLING": "#f59e0b",
+        "LVSG 5 LOADS": "#10b981"
+    };
+
     const colors = this.state.userColors || defaultColors;
 
-    const customOrder = ["Refrigeration System", "Clean Steam Generator", "Bulk Chemical System", "Condensate Return System", "RVAC", "BOILER", "Compressed Dry Air (CDA)", "Waste Water Treatment Plant (WWTP)", "Water Treatment Plant (WTP)", "Combined Water Storage (CWS)", "Sump Pit Pump 1", "Freezer & Cold Storage", "CIP Line (E7)", "Bottle Washer (E8)", "Modular Labeller (E9)", "Container Conveyor (E10)", "Conveyor Lubrication (E11)", "Alwin Soy", "Process MCC", "Homogenizer", "Soya Bean Pre-treatment & Handling", "Sugar Dissolving", "Container Dryer (E1)", "Packer (E2)", "Unpacker (E3)", "Container Depalettiser (E4)", "Pack Washing (E5)", "Inspector (E6)", "Pack Conveyor (E12)", "Ups", "Wrap Round", "Hydro Sterilizer", "Filler", "DPP", "DLP", "Warehouse", "RVAC (220V)", "WWTP (220V)", "DP-WM", "Sumppit Pump2", "Accumulation Table"];
+    const customOrder = [
+        "Refrigeration System",
+        "Clean Steam Generator",
+        "Bulk Chemical System",
+        "Condensate Return System",
+        "RVAC",
+        "BOILER",
+        "Compressed Dry Air (CDA)",
+        "Waste Water Treatment Plant (WWTP)",
+        "Water Treatment Plant (WTP)",
+        "Combined Water Storage (CWS)",
+        "Sump Pit Pump 1",
+        "Freezer & Cold Storage",
+        "CIP Line (E7)",
+        "Bottle Washer (E8)",
+        "Modular Labeller (E9)",
+        "Container Conveyor (E10)",
+        "Conveyor Lubrication (E11)",
+        "Alwin Soy",
+        "Process MCC",
+        "Homogenizer",
+        "Soya Bean Pre-treatment & Handling",
+        "Sugar Dissolving",
+        "Container Dryer (E1)",
+        "Packer (E2)",
+        "Unpacker (E3)",
+        "Container Depalettiser (E4)",
+        "Pack Washing (E5)",
+        "Inspector (E6)",
+        "Pack Conveyor (E12)",
+        "Ups",
+        "Wrap Round",
+        "Hydro Sterilizer",
+        "Filler",
+        "DPP",
+        "DLP",
+        "Warehouse",
+        "RVAC (220V)",
+        "WWTP (220V)",
+        "DP-WM",
+        "Sumppit Pump2",
+        "Accumulation Table"
+    ];
 
-    return `<div class="p-4 max-w-xl mx-auto min-h-screen pb-40">
-        <div class="flex justify-between items-center mb-6 pt-4">
-          <button onclick="app.state.view='home';app.render()" class="font-black text-[10px] tracking-widest px-4 py-2 bg-white/10 rounded-xl border border-white/20">← BACK</button>
-          <input type="date" value="${this.state.filterDate}" onchange="app.state.filterDate=this.value; app.syncWithCloud(this.value)" class="bg-white/10 px-4 py-2 rounded-xl font-bold text-xs border border-white/20 text-emerald-500 outline-none">
+    return `
+    <div class="p-3 sm:p-4 max-w-xl mx-auto min-h-screen pb-40">
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+        <div class="flex justify-between items-center mb-5 pt-3">
+
+            <button
+                onclick="app.state.view='home';app.render()"
+                class="font-black text-[10px] tracking-widest
+                       px-4 py-2.5 bg-white/10 rounded-xl
+                       border border-white/20
+                       active:scale-95 transition-all"
+            >
+                ← BACK
+            </button>
+
+            <input
+                type="date"
+                value="${this.state.filterDate}"
+                onchange="app.state.filterDate=this.value; app.syncWithCloud(this.value)"
+                class="bg-white/10 px-3 sm:px-4 py-2.5 rounded-xl
+                       font-bold text-xs border border-white/20
+                       text-emerald-500 outline-none"
+            >
+
         </div>
-        <div class="glass-card p-8 rounded-[2rem] shadow-2xl mb-8 border-b-8 border-emerald-500 text-center">
-          <h3 class="text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">Daily Consumption</h3>
-          <div class="text-4xl font-black font-mono-numbers mb-2">${grandTotal.toFixed(3)} <span class="text-[10px] font-sans">kWh</span></div>
-          <p class="text-[9px] font-black uppercase text-emerald-500">OPERATOR: ${meta.operator || 'UNSPECIFIED'}</p>
+
+        <!-- =================================================
+             DAILY SUMMARY
+             ================================================= -->
+        <div
+            class="glass-card p-6 sm:p-8 rounded-[2rem]
+                   shadow-2xl mb-6 border-b-8 border-emerald-500
+                   text-center"
+        >
+
+            <h3 class="text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">
+                Daily Consumption
+            </h3>
+
+            <div class="text-3xl sm:text-4xl font-black font-mono-numbers mb-2">
+                ${grandTotal.toFixed(3)}
+                <span class="text-[10px] font-sans">kWh</span>
+            </div>
+
+            <p class="text-[9px] font-black uppercase text-emerald-500">
+                OPERATOR: ${meta.operator || 'UNSPECIFIED'}
+            </p>
+
         </div>
-        <div class="space-y-4">
-          ${customOrder.map(name => {
-            const e = MOCK_EQUIPMENT.find(eq => eq.name.toLowerCase() === name.toLowerCase());
-            if (!e) return '';
-            const r = this.state.cloudReadings[e.id] || { prev: '0', curr: '0', usage: '0' };
-            const catColor = colors[e.loc] || defaultColors[e.loc] || "#3b82f6";
-            return `<div class="glass-card p-4 rounded-2xl flex items-center justify-between" onclick="app.editFromDashboard('${e.id}')">
-              <div class="flex-1">
-                <p class="text-[10px] font-white uppercase mb-1">${e.name}</p>
-                <div class="text-[9px] font-mono-numbers text-white space-y-0.5">
-                  <div><span class="opacity-50">Prev:</span> <span class="opacity-70">${r.prev}</span></div>
-                  <div><span class="font-semibold" style="color:${catColor}">Curr:</span> <span class="font-bold text-[14px] ml-1">${r.curr}</span></div>
+
+        <!-- =================================================
+             EQUIPMENT RECORDS
+             ================================================= -->
+        <div class="space-y-3 sm:space-y-4">
+
+            ${customOrder.map(name => {
+
+                const e = MOCK_EQUIPMENT.find(
+                    eq => eq.name.toLowerCase() === name.toLowerCase()
+                );
+
+                if (!e) return '';
+
+                /*
+                 * =================================================
+                 * IMPORTANT DISPLAY LOGIC
+                 *
+                 * If current date has NO reading yet:
+                 *
+                 * Previous = yesterday's CURRENT
+                 * Current  = 0
+                 * Total    = 0
+                 *
+                 * Once current reading exists:
+                 *
+                 * Previous = saved previous
+                 * Current  = saved current
+                 * Total    = saved usage
+                 *
+                 * THIS DOES NOT CHANGE SAVE/READING LOGIC.
+                 * DISPLAY ONLY.
+                 * =================================================
+                 */
+
+                const r = this.state.cloudReadings[e.id];
+
+                const yesterday =
+                    this.state.yesterdayReadings &&
+                    this.state.yesterdayReadings[e.id];
+
+                const previousDisplay = r
+                    ? (r.prev ?? '0')
+                    : (yesterday?.curr ?? '0');
+
+                const currentDisplay = r
+                    ? (r.curr ?? '0')
+                    : '0';
+
+                const totalDisplay = r
+                    ? formatUsageDisplay(r.usage)
+                    : '0';
+
+                const catColor =
+                    colors[e.loc] ||
+                    defaultColors[e.loc] ||
+                    "#3b82f6";
+
+                return `
+                <div
+    id="record-card-${e.id}"
+    class="glass-card powercon-record-card
+           p-3 sm:p-4 rounded-2xl"
+    onclick="app.handleRecordCardClick('${e.id}')"
+>
+                    <!-- EQUIPMENT -->
+                    <div class="text-center mb-3 px-2">
+
+                        <p class="powercon-record-equipment">
+                            ${e.name}
+                        </p>
+
+                        <span
+                            class="inline-block mt-1
+                                   text-[7px] sm:text-[8px]
+                                   font-black uppercase
+                                   tracking-widest opacity-40"
+                        >
+                            ${e.loc}
+                        </span>
+
+                    </div>
+
+                    <!-- THREE READINGS -->
+                    <div class="powercon-record-grid">
+
+                        <!-- PREVIOUS -->
+                        <div
+                            class="powercon-record-cell
+                                   bg-black/5 dark:bg-white/5"
+                        >
+
+                            <div class="powercon-record-label opacity-50">
+                                Previous
+                            </div>
+
+                            <div class="powercon-record-value">
+                                ${previousDisplay}
+                            </div>
+
+                        </div>
+
+                        <!-- CURRENT — HIGHLIGHTED -->
+                        <div
+                            class="powercon-record-cell
+                                   bg-emerald-500/10
+                                   border border-emerald-500/20"
+                        >
+
+                            <div
+                                class="powercon-record-label"
+                                style="color:${catColor}"
+                            >
+                                Current
+                            </div>
+
+                            <div
+                                class="powercon-record-value
+                                       text-emerald-500"
+                            >
+                                ${currentDisplay}
+                            </div>
+
+                        </div>
+
+                        <!-- TOTAL -->
+                        <div
+                            class="powercon-record-cell
+                                   bg-emerald-500/10"
+                        >
+
+                            <div class="powercon-record-label text-emerald-500">
+                                Total
+                            </div>
+
+                            <div
+                                class="powercon-record-value
+                                       text-emerald-600"
+                            >
+                                ${totalDisplay}
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <!-- FOCUS INDICATOR -->
+                    <span class="powercon-focus-indicator">
+                        ✓
+                    </span>
+
                 </div>
-              </div>
-              <div class="text-right"><p class="text-[16px] font-mono-numbers font-white text-emerald-600">${r.usage}</p></div>
-            </div>`;
-          }).join('')}
+                `;
+
+            }).join('')}
+
         </div>
-        <div class="fixed bottom-0 left-0 w-full p-4 bg-transparent backdrop-blur-md flex gap-3">
-          <button onclick="app.exportToExcel()" class="flex-1 bg-slate-900 text-white py-4 rounded-xl font-black text-[10px] uppercase">Download CSV</button>
-          <button onclick="window.open('logsheet.html?date=' + app.state.filterDate, '_blank')" class="flex-1 bg-emerald-600 text-white py-4 rounded-xl font-black text-[10px] uppercase">Print Log</button>
+
+        <!-- =================================================
+             BOTTOM ACTIONS
+             ================================================= -->
+        <div
+            class="fixed bottom-0 left-0 w-full
+                   p-3 sm:p-4
+                   bg-transparent backdrop-blur-md
+                   flex gap-2 sm:gap-3
+                   z-20"
+        >
+
+            <button
+    onclick="app.exportToExcel()"
+    class="powercon-action-btn powercon-download-btn flex-1
+           rounded-xl
+           uppercase
+           active:scale-95 transition-all"
+>
+    Download CSV
+</button>
+
+            <button
+    onclick="window.open('logsheet.html?date=' + app.state.filterDate, '_blank')"
+    class="powercon-action-btn flex-1
+           bg-emerald-600 text-white
+           rounded-xl
+           uppercase
+           active:scale-95 transition-all"
+>
+    Print Log
+</button>
+
         </div>
-    </div>`;
-  }
+
+    </div>
+    `;
+}
 
   async saveReading(currInput, prevInput) {
     const eq = MOCK_EQUIPMENT[this.state.currentIndex];
@@ -511,6 +1575,65 @@ homeHTML() {
 }
   exitReading() { if (this.state.isEditingFromReview) { this.state.isEditingFromReview = false; this.state.view = 'review'; } else { this.state.view = this.state.isSingleEdit ? 'records' : 'home'; } this.state.isSingleEdit = false; this.render(); }
   editFromReview(i) { this.state.currentIndex = i; this.state.isEditingFromReview = true; this.state.view = 'reading'; this.render(); }
+    handleRecordCardClick(id) {
+
+    const selected = document.getElementById(
+        `record-card-${id}`
+    );
+
+    if (!selected) return;
+
+    /*
+     * FIRST TAP
+     * Focus / highlight only
+     */
+    if (!selected.classList.contains('powercon-focused')) {
+
+        this.focusRecordCard(id);
+
+        return;
+    }
+
+    /*
+     * SECOND TAP ON SAME CARD
+     * Open protected editing
+     */
+    this.editFromDashboard(id);
+}
+    focusRecordCard(id) {
+
+    const cards = document.querySelectorAll(
+        '.powercon-record-card'
+    );
+
+    // Reset all cards
+    cards.forEach(card => {
+        card.classList.remove('powercon-focused');
+        card.classList.add('powercon-unfocused');
+    });
+
+    // Find selected card
+    const selected = document.getElementById(
+        `record-card-${id}`
+    );
+
+    if (!selected) return;
+
+    // Highlight selected card
+    selected.classList.remove('powercon-unfocused');
+    selected.classList.add('powercon-focused');
+
+    // Automatically bring it to the center
+    selected.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    // Small haptic feedback
+    if (navigator.vibrate) {
+        navigator.vibrate(15);
+    }
+}
   editFromDashboard(id) { const pin = prompt("Admin PIN:"); if (pin === "abnpower") { const index = MOCK_EQUIPMENT.findIndex(e => e.id === id); if (index !== -1) { this.state.isSingleEdit = true; this.state.currentIndex = index; this.state.view = 'reading'; this.render(); } } }
   exportToExcel() {
     let csv = "ID,Equipment,Location,Previous,Current,Usage\n";
