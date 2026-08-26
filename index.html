@@ -649,11 +649,232 @@
       }
 
     }
+      /* =========================================================
+   POWERCON SPLASH SCREEN
+   ========================================================= */
+
+#powerconSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(16,185,129,0.12),
+      transparent 45%
+    ),
+    #ffffff;
+
+  opacity: 1;
+  visibility: visible;
+
+  transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+}
+
+#powerconSplash.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.8s ease,
+    visibility 0s linear 0.8s;
+}
+
+#powerconSplash.hide .splash-content {
+  animation: splashExit 0.8s ease forwards;
+}
+
+#powerconSplash.hide .splash-loader-bar {
+  animation: none;
+}
+
+.splash-content {
+  width: 100%;
+  max-width: 320px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+
+  animation: splashEnter 0.8s ease-out;
+}
+
+.splash-logo {
+  width: 92px;
+  height: 92px;
+
+  object-fit: contain;
+
+  margin-bottom: 18px;
+
+  animation:
+    splashLogo 1.2s ease-in-out infinite alternate;
+}
+
+.splash-title {
+  font-size: 38px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.splash-title span {
+  color: #10b981;
+}
+
+.splash-subtitle {
+  margin-top: 8px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 4px;
+
+  opacity: 0.45;
+}
+
+.splash-loader {
+  width: 180px;
+  height: 4px;
+
+  margin-top: 32px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(16,185,129,0.12);
+}
+
+.splash-loader-bar {
+  width: 40%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #10b981;
+
+  animation: splashLoading 1.2s ease-in-out infinite;
+}
+
+.splash-status {
+  margin-top: 12px;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+
+  opacity: 0.4;
+}
+
+@keyframes splashLoading {
+
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(350%);
+  }
+
+}
+
+@keyframes splashLogo {
+
+  from {
+    transform: scale(0.96);
+    opacity: 0.75;
+  }
+
+  to {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+
+}
+
+@keyframes splashEnter {
+
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+}
+      @keyframes splashExit {
+
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+}
 
   </style>
 </head>
 
 <body id="bodyBg" class="h-full light-mode">
+
+  <!-- =========================================================
+       POWERCON SPLASH SCREEN
+       ========================================================= -->
+
+  <div id="powerconSplash">
+
+    <div class="splash-content">
+
+      <img
+        src="assets/abnlogo.svg"
+        alt="ABN Logo"
+        class="splash-logo"
+      >
+
+      <div class="splash-title">
+        POWER<span>CON</span>
+      </div>
+
+      <div class="splash-subtitle">
+        NUTRIBEV CORPORATION
+      </div>
+
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+
+      <div class="splash-status">
+        INITIALIZING SYSTEM...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================================
+       MAIN APPLICATION
+       ========================================================= -->
 
   <div id="app" class="h-full w-full"></div>
 
@@ -4457,12 +4678,42 @@ catch (e) {
     }, 2000);
 
 
-    /* =========================================================
-       START APPLICATION
-       ========================================================= */
+/* =========================================================
+   START APPLICATION
+   ========================================================= */
 
-    const app =
-      new PowerCon();
+const app =
+  new PowerCon();
+
+
+/* =========================================================
+   HIDE SPLASH SCREEN
+   ========================================================= */
+
+window.addEventListener('load', () => {
+
+  setTimeout(() => {
+
+    const splash =
+      document.getElementById(
+        'powerconSplash'
+      );
+
+    if (splash) {
+
+      splash.classList.add('hide');
+
+      setTimeout(() => {
+
+        splash.remove();
+
+      }, 800);
+
+    }
+
+  }, 2500);
+
+});
 
   </script>
 
