@@ -1,1774 +1,4470 @@
 <!doctype html>
 <html lang="en" class="h-full">
+
 <head>
   <meta charset="UTF-8">
+
   <meta name="theme-color" content="#10b981">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <meta property="og:title" content="ABN PowerCon" />
-<meta property="og:description" content="Industrial Power Consumption Monitoring System" />
-<meta property="og:image" content="https://abnpowercon.vercel.app/og-image.png" />
-<meta property="og:type" content="website" />
+  <meta property="og:description" content="Industrial Power Consumption Monitoring System" />
+  <meta property="og:image" content="https://abnpowercon.vercel.app/og-image.png" />
+  <meta property="og:type" content="website" />
+
   <title>ABN PowerCon</title>
-   <link rel="apple-touch-icon" sizes="180x180" href="assets/abnlogo.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/abnlogo.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/abnlogo.ico">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/abnlogo.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/abnlogo.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/abnlogo.ico">
   <link rel="manifest" href="manifest.json">
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
- <style>
+
+  <style>
+
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
-    
-    body { 
-        font-family: 'Plus+Jakarta+Sans', sans-serif; 
-        background-image: url('assets/bg.webp'); 
-        background-size: cover; 
-        background-position: center; 
-        background-attachment: fixed; 
-        transition: all 0.4s ease; 
-        margin: 0; 
-    }
-    
-    .font-mono-numbers { font-family: 'JetBrains Mono', monospace; }
-    .glass-card { transition: all 0.3s ease; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 
-    /* --- Light Mode (Para sa Snow, Sky, Rose, Cream) --- */
-    .light-mode { color: #0f172a; }
-    .light-mode .glass-card { 
-        background: rgba(255, 255, 255, var(--glass-opacity, 0.8)); 
-        border: 1px solid rgba(0, 0, 0, 0.05); 
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    body {
+      font-family: 'Plus+Jakarta+Sans', sans-serif;
+      background-image: url('assets/bg.webp');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      transition: all 0.4s ease;
+      margin: 0;
     }
-    .light-mode .modal-content { background: #ffffff; color: #0f172a; border: 1px solid #e2e8f0; }
-    
-    /* Auto-fix para sa text na hardcoded na white sa HTML */
-    .light-mode .text-white, 
-    .light-mode .font-white,
-    .light-mode p.text-white { color: #0f172a !important; }
-    
-    /* Keypad sa Light Mode */
-    .light-mode .num-btn { background: rgba(0,0,0,0.06); color: #0f172a; border: 1px solid rgba(0,0,0,0.03); }
 
-    /* --- Dark Mode (Para sa Night, Forest, Ruby, Earth) --- */
-    .dark-mode { color: #ffffff; }
-    .dark-mode .glass-card { 
-        background: rgba(0, 0, 0, var(--glass-opacity, 0.5)) !important; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
+    .font-mono-numbers {
+      font-family: 'JetBrains Mono', monospace;
     }
-    .dark-mode .modal-content { background: #0f172a; color: #ffffff; border: 1px solid #1e293b; }
-    .dark-mode .text-emerald-600 { color: #34d399 !important; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3); }
-    .dark-mode input { color: white; }
-    
-    /* Keypad sa Dark Mode */
-    .dark-mode .num-btn { background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.05); }
 
-    /* --- Keypad & Modals --- */
-    .num-btn { 
-        height: 55px; display: flex; align-items: center; justify-content: center; 
-        font-size: 1.25rem; font-weight: 800; border-radius: 1rem; 
-        transition: all 0.1s; cursor: pointer; user-select: none; 
-        -webkit-tap-highlight-color: transparent; touch-action: manipulation; 
+    .glass-card {
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
-    .num-btn:active, .num-btn.active-key { background: #10b981 !important; color: white !important; transform: scale(0.95); }
-    
-    .modal { 
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-        backdrop-filter: blur(10px); display: flex; align-items: center; 
-        justify-content: center; z-index: 9999; padding: 1.5rem; 
-    }
-    .hidden { display: none !important; }
-    .theme-preview { height: 35px; width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); }
-    
+
     /* =========================================================
-   POWERCON MOBILE READING OPTIMIZATION
-   UI ONLY — NO READING LOGIC CHANGES
-   ========================================================= */
+       LIGHT MODE
+       ========================================================= */
 
-.powercon-equipment-card {
-    width: 100%;
-    text-align: center;
-    padding: 0.9rem 0.75rem;
-    border-radius: 1.25rem;
-    margin-bottom: 1rem;
+    .light-mode {
+      color: #0f172a;
+    }
 
-    overflow: visible;
+    .light-mode .glass-card {
+      background: rgba(255, 255, 255, var(--glass-opacity, 0.8));
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
 
-    overflow-wrap: anywhere;
-    word-break: normal;
-}
+    .light-mode .modal-content {
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
 
-.powercon-equipment-name {
-    font-size: clamp(1rem, 4.8vw, 1.35rem);
-    line-height: 1.2;
-    font-weight: 800;
-    text-align: center;
+    .light-mode .text-white,
+    .light-mode .font-white,
+    .light-mode p.text-white {
+      color: #0f172a !important;
+    }
 
-    overflow-wrap: anywhere;
-}
+    .light-mode .num-btn {
+      background: rgba(0,0,0,0.06);
+      color: #0f172a;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
 
-.powercon-reading-label {
-    font-size: clamp(0.62rem, 2.4vw, 0.75rem);
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
+    /* =========================================================
+       DARK MODE
+       ========================================================= */
 
-.powercon-reading-number {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(1.15rem, 5.8vw, 1.7rem);
-    line-height: 1.15;
-    font-weight: 800;
+    .dark-mode {
+      color: #ffffff;
+    }
 
-    white-space: nowrap;
-    overflow: visible;
-}
+    .dark-mode .glass-card {
+      background: rgba(0, 0, 0, var(--glass-opacity, 0.5)) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-.powercon-current-input {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(2.25rem, 12vw, 3.8rem);
-    line-height: 1;
-    font-weight: 800;
+    .dark-mode .modal-content {
+      background: #0f172a;
+      color: #ffffff;
+      border: 1px solid #1e293b;
+    }
 
-    width: 100%;
-    min-width: 0;
+    .dark-mode .text-emerald-600 {
+      color: #34d399 !important;
+      text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+    }
 
-    text-align: center;
+    .dark-mode input {
+      color: white;
+    }
 
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
+    .dark-mode .num-btn {
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
 
-    scrollbar-width: none;
-}
+    /* =========================================================
+       KEYPAD
+       ========================================================= */
 
-.powercon-current-input::-webkit-scrollbar {
-    display: none;
-}
+    .num-btn {
+      height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 800;
+      border-radius: 1rem;
+      transition: all 0.1s;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
 
+    .num-btn:active,
+    .num-btn.active-key {
+      background: #10b981 !important;
+      color: white !important;
+      transform: scale(0.95);
+    }
 
-/* =========================================================
-   RECORDS / LOGSHEET
-   ========================================================= */
+    /* =========================================================
+       MODALS
+       ========================================================= */
 
-.powercon-record-card {
-    width: 100%;
-    min-width: 0;
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1.5rem;
+    }
 
-    /*
-      IMPORTANT:
-      Huwag putulin ang mahahabang readings.
-    */
-    overflow: visible;
-}
+    .hidden {
+      display: none !important;
+    }
 
-/* =========================================================
-   LOGSHEET EQUIPMENT LABEL
-   Green badge + LOCATION always below
-   ========================================================= */
+    .theme-preview {
+      height: 35px;
+      width: 100%;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
 
-.powercon-record-equipment {
-    display: block;
+    /* =========================================================
+       POWERCON MOBILE READING
+       ========================================================= */
 
-    width: fit-content;
-    max-width: 100%;
+    .powercon-equipment-card {
+      width: 100%;
+      text-align: center;
+      padding: 0.9rem 0.75rem;
+      border-radius: 1.25rem;
+      margin-bottom: 1rem;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
 
-    margin: 0 auto;
+    .powercon-equipment-name {
+      font-size: clamp(1rem, 4.8vw, 1.35rem);
+      line-height: 1.2;
+      font-weight: 800;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
 
-    padding: 0.45rem 0.85rem;
+    .powercon-reading-label {
+      font-size: clamp(0.62rem, 2.4vw, 0.75rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
-    border-radius: 0.7rem;
+    .powercon-reading-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(1.15rem, 5.8vw, 1.7rem);
+      line-height: 1.15;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: visible;
+    }
 
-    background: linear-gradient(
+    .powercon-current-input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(2.25rem, 12vw, 3.8rem);
+      line-height: 1;
+      font-weight: 800;
+      width: 100%;
+      min-width: 0;
+      text-align: center;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+
+    .powercon-current-input::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* =========================================================
+       EDITABLE READING BOX
+       ========================================================= */
+
+    .powercon-edit-box {
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+
+      transition:
+        transform 0.15s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .powercon-edit-box:active {
+      transform: scale(0.98);
+    }
+
+    .powercon-edit-box.powercon-edit-selected {
+      border: 2px solid #10b981 !important;
+      background: rgba(16,185,129,0.10) !important;
+
+      box-shadow:
+        0 0 0 3px rgba(16,185,129,0.12),
+        0 10px 25px rgba(16,185,129,0.12);
+    }
+
+    .powercon-edit-box .edit-active-indicator {
+      display: none;
+    }
+
+    .powercon-edit-box.powercon-edit-selected .edit-active-indicator {
+      display: inline-flex;
+    }
+
+    .powercon-edit-help {
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #10b981;
+    }
+
+    /* =========================================================
+       RECORDS
+       ========================================================= */
+
+    .powercon-record-card {
+      width: 100%;
+      min-width: 0;
+      overflow: visible;
+    }
+
+    .powercon-record-equipment {
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0.45rem 0.85rem;
+      border-radius: 0.7rem;
+
+      background: linear-gradient(
         135deg,
         #047857 0%,
         #10b981 50%,
         #059669 100%
-    );
+      );
 
-    border: 1px solid rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.25);
 
-    color: #ffffff !important;
+      color: #ffffff !important;
 
-    font-size: clamp(0.72rem, 3.2vw, 0.9rem);
-    line-height: 1.25;
+      font-size: clamp(0.72rem, 3.2vw, 0.9rem);
+      line-height: 1.25;
+      font-weight: 900;
 
-    font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
 
-    text-align: center;
-    text-transform: uppercase;
+      letter-spacing: 0.02em;
 
-    letter-spacing: 0.02em;
-
-    text-shadow:
+      text-shadow:
         0 1px 2px rgba(0, 0, 0, 0.35);
 
-    box-shadow:
+      box-shadow:
         0 4px 14px rgba(16, 185, 129, 0.18),
         inset 0 1px 0 rgba(255, 255, 255, 0.18);
 
-    overflow-wrap: anywhere;
-    word-break: normal;
-}
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }
 
+    .powercon-record-equipment + span {
+      display: block !important;
+      width: 100%;
+      margin-top: 1px !important;
+      text-align: center;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
 
-/* =========================================================
-   LOCATION
-   UTILITIES / PROCESS / BOTTLING
-   Always below equipment badge
-   ========================================================= */
+    .powercon-record-grid {
+      display: grid;
 
-.powercon-record-equipment + span {
-    display: block !important;
-
-    width: 100%;
-
-    margin-top: 1px !important;
-
-    text-align: center;
-
-    line-height: 1.1;
-
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   READING GRID
-   ========================================================= */
-
-.powercon-record-grid {
-    display: grid;
-
-    /*
-      CURRENT gets slightly more room.
-      Mas safe ito sa mahahabang decimal values.
-    */
-    grid-template-columns:
+      grid-template-columns:
         minmax(0, 1fr)
         minmax(0, 1.25fr)
         minmax(0, 0.95fr);
 
-    width: 100%;
-
-    gap: clamp(0.25rem, 1.8vw, 0.7rem);
-
-    align-items: center;
-
-    overflow: visible;
-}
-
-
-/* =========================================================
-   READING CELL
-   ========================================================= */
-
-.powercon-record-cell {
-    min-width: 0;
-
-    text-align: center;
-
-    padding:
-        clamp(0.5rem, 2.5vw, 0.8rem)
-        0.15rem;
-
-    border-radius: 0.9rem;
-
-    /*
-      IMPORTANT:
-      Ito ang dating nagpuputol ng long numbers.
-    */
-    overflow: visible;
-}
-
-
-/* =========================================================
-   LABEL
-   ========================================================= */
-
-.powercon-record-label {
-    display: block;
-
-    width: 100%;
-
-    font-size: clamp(0.55rem, 2.2vw, 0.7rem);
-
-    line-height: 1.1;
-
-    font-weight: 800;
-
-    text-transform: uppercase;
-
-    letter-spacing: 0.03em;
-
-    white-space: nowrap;
-
-    overflow: visible;
-}
-
-
-/* =========================================================
-   READING VALUE
-   ========================================================= */
-
-.powercon-record-value {
-    display: block;
-
-    width: 100%;
-
-    margin-top: 0.35rem;
-
-    font-family: 'JetBrains Mono', monospace;
-
-    /*
-      Responsive size.
-      Mahabang number = mas compact sa small screen.
-    */
-    font-size: clamp(
-        0.68rem,
-        4vw,
-        1.15rem
-    );
-
-    line-height: 1.1;
-
-    font-weight: 800;
-
-    white-space: nowrap;
-
-    overflow: visible;
-
-    text-overflow: clip;
-
-    letter-spacing: -0.055em;
-
-    text-align: center;
-}
-
-
-/* =========================================================
-   CURRENT READING HIGHLIGHT
-   ========================================================= */
-
-.powercon-record-current {
-    background: rgba(16, 185, 129, 0.10);
-
-    border: 1px solid rgba(16, 185, 129, 0.25);
-
-    color: #10b981;
-
-    box-shadow:
-        0 3px 12px rgba(16, 185, 129, 0.08);
-}
-
-
-/* =========================================================
-   TOTAL = 0
-   ========================================================= */
-
-.powercon-record-total-zero {
-    font-family: 'JetBrains Mono', monospace;
-
-    font-weight: 900;
-
-    /*
-      Kapag zero:
-      0
-      instead of:
-      0.000
-    */
-}
-
-
-/* =========================================================
-   VERY SMALL ANDROID
-   ========================================================= */
-
-@media (max-width: 350px) {
-
-    .powercon-record-grid {
-        grid-template-columns:
-            minmax(0, 1fr)
-            minmax(0, 1.25fr)
-            minmax(0, 0.95fr);
-
-        gap: 0.15rem;
+      width: 100%;
+      gap: clamp(0.25rem, 1.8vw, 0.7rem);
+      align-items: center;
+      overflow: visible;
     }
 
     .powercon-record-cell {
-        padding-left: 0.05rem;
-        padding-right: 0.05rem;
-    }
-
-    .powercon-record-value {
-        font-size: 0.62rem;
-        letter-spacing: -0.07em;
+      min-width: 0;
+      text-align: center;
+      padding:
+        clamp(0.5rem, 2.5vw, 0.8rem)
+        0.15rem;
+      border-radius: 0.9rem;
+      overflow: visible;
     }
 
     .powercon-record-label {
-        font-size: 0.48rem;
-    }
-}
-
-
-/* =========================================================
-   NORMAL PHONES
-   ========================================================= */
-
-@media (min-width: 351px) and (max-width: 430px) {
-
-    .powercon-record-value {
-        font-size: clamp(
-            0.68rem,
-            3.8vw,
-            1rem
-        );
-
-        letter-spacing: -0.06em;
-    }
-}
-
-
-/* =========================================================
-   LARGE PHONES
-   Samsung / iPhone Pro Max / etc.
-   ========================================================= */
-
-@media (min-width: 431px) {
-
-    .powercon-record-grid {
-        gap: 0.65rem;
+      display: block;
+      width: 100%;
+      font-size: clamp(0.55rem, 2.2vw, 0.7rem);
+      line-height: 1.1;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: visible;
     }
 
     .powercon-record-value {
-        font-size: 1.15rem;
+      display: block;
+      width: 100%;
+      margin-top: 0.35rem;
+      font-family: 'JetBrains Mono', monospace;
 
-        letter-spacing: -0.04em;
+      font-size: clamp(
+        0.68rem,
+        4vw,
+        1.15rem
+      );
+
+      line-height: 1.1;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      letter-spacing: -0.055em;
+      text-align: center;
     }
-}
 
+    .powercon-record-current {
+      background: rgba(16, 185, 129, 0.10);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #10b981;
 
-/* =========================================================
-   TABLET / DESKTOP
-   ========================================================= */
-
-@media (min-width: 640px) {
-
-    .powercon-reading-number {
-        font-size: 1.8rem;
+      box-shadow:
+        0 3px 12px rgba(16, 185, 129, 0.08);
     }
 
-    .powercon-current-input {
-        font-size: 3.5rem;
+    .powercon-record-total-zero {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 900;
     }
 
-    .powercon-record-value {
-        font-size: 1.2rem;
+    /* =========================================================
+       RECORD FOCUS
+       ========================================================= */
 
-        letter-spacing: -0.035em;
-    }
-}
-     /* =========================================================
-   POWERCON EQUIPMENT LABEL
-   Isolated from UI Theme Settings
-   ========================================================= */
+    .powercon-record-card {
+      position: relative;
+      cursor: pointer;
 
-.powercon-equipment-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    max-width: 100%;
-
-    padding: 0.65rem 1rem;
-    border-radius: 0.9rem;
-
-    background: linear-gradient(
-        135deg,
-        #047857 0%,
-        #10b981 50%,
-        #059669 100%
-    );
-
-    border: 1px solid rgba(255, 255, 255, 0.25);
-
-    box-shadow:
-        0 6px 18px rgba(16, 185, 129, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.20);
-
-    color: #ffffff !important;
-
-    font-size: clamp(0.95rem, 4.2vw, 1.25rem);
-    line-height: 1.2;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-
-    text-align: center;
-    text-transform: uppercase;
-
-    text-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.35);
-
-    overflow-wrap: anywhere;
-    word-break: normal;
-}
-
-/* =========================================================
-   LOGSHEET COPY FOCUS
-   Clicked equipment becomes clearly visible
-   ========================================================= */
-
-.powercon-record-card {
-    position: relative;
-    cursor: pointer;
-
-    transition:
+      transition:
         transform 0.2s ease,
         box-shadow 0.25s ease,
         opacity 0.25s ease,
         border-color 0.25s ease;
-}
+    }
 
-/* Normal cards become slightly quieter */
-.powercon-record-card.powercon-unfocused {
-    opacity: 0.55;
-}
+    .powercon-record-card.powercon-unfocused {
+      opacity: 0.55;
+    }
 
-/* Selected card */
-.powercon-record-card.powercon-focused {
-    opacity: 1 !important;
+    .powercon-record-card.powercon-focused {
+      opacity: 1 !important;
 
-    transform: scale(1.015);
+      transform: scale(1.015);
 
-    border: 2px solid #10b981 !important;
+      border: 2px solid #10b981 !important;
 
-    box-shadow:
+      box-shadow:
         0 0 0 3px rgba(16, 185, 129, 0.18),
         0 12px 35px rgba(16, 185, 129, 0.22);
 
-    z-index: 5;
-}
-
-/* Small FOCUS indicator */
-.powercon-focus-indicator {
-    display: none;
-}
-
-.powercon-record-card.powercon-focused .powercon-focus-indicator {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-
-    width: 1.5rem;
-    height: 1.5rem;
-
-    border-radius: 999px;
-
-    background: #10b981;
-    color: white;
-
-    font-size: 0.75rem;
-    font-weight: 900;
-
-    box-shadow:
-        0 4px 12px rgba(16, 185, 129, 0.35);
-}
-
-/* Mobile: avoid excessive scaling */
-@media (max-width: 480px) {
-    .powercon-record-card.powercon-focused {
-        transform: scale(1.01);
+      z-index: 5;
     }
-}
-     /* =========================================================
-   POWERCON ACTION BUTTONS
-   ========================================================= */
 
-.powercon-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    .powercon-focus-indicator {
+      display: none;
+    }
 
-    min-height: 52px;
-    padding: 0.85rem 0.75rem;
+    .powercon-record-card.powercon-focused .powercon-focus-indicator {
+      display: inline-flex;
 
-    font-size: clamp(0.68rem, 3vw, 0.82rem);
-    line-height: 1.15;
+      align-items: center;
+      justify-content: center;
 
-    font-weight: 900;
-    letter-spacing: 0.025em;
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
 
-    text-align: center;
-    white-space: nowrap;
+      width: 1.5rem;
+      height: 1.5rem;
 
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+      border-radius: 999px;
 
-    -webkit-font-smoothing: antialiased;
+      background: #10b981;
+      color: white;
 
-    transition:
+      font-size: 0.75rem;
+      font-weight: 900;
+
+      box-shadow:
+        0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    @media (max-width: 480px) {
+
+      .powercon-record-card.powercon-focused {
+        transform: scale(1.01);
+      }
+
+    }
+
+    /* =========================================================
+       ACTION BUTTONS
+       ========================================================= */
+
+    .powercon-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 52px;
+      padding: 0.85rem 0.75rem;
+
+      font-size: clamp(0.68rem, 3vw, 0.82rem);
+      line-height: 1.15;
+
+      font-weight: 900;
+      letter-spacing: 0.025em;
+
+      text-align: center;
+      white-space: nowrap;
+
+      text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.25);
+
+      -webkit-font-smoothing: antialiased;
+
+      transition:
         transform 0.15s ease,
         filter 0.15s ease;
-}
+    }
 
-.powercon-action-btn:active {
-    transform: scale(0.96);
-}
-     .powercon-action-btn.powercon-download-btn {
-    color: #ffffff !important;
-    background: #0f172a !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
-}
+    .powercon-action-btn:active {
+      transform: scale(0.96);
+    }
 
-@media (max-width: 350px) {
-    .powercon-action-btn {
+    .powercon-action-btn.powercon-download-btn {
+      color: #ffffff !important;
+      background: #0f172a !important;
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.65);
+    }
+
+    /* =========================================================
+       VIEW LOGSHEET
+       ========================================================= */
+
+    .powercon-view-logsheet-btn {
+      background: #ffffff;
+      color: #0f172a !important;
+
+      border: 1px solid rgba(15, 23, 42, 0.08);
+
+      box-shadow:
+        0 4px 14px rgba(15, 23, 42, 0.10);
+
+      text-shadow: none;
+
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .powercon-view-logsheet-btn:hover {
+      background: #f8fafc;
+    }
+
+    .powercon-view-logsheet-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* =========================================================
+       HOME CONTROLS
+       ========================================================= */
+
+    .powercon-home-controls {
+      width: 100%;
+      max-width: 360px;
+
+      margin: auto;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+    }
+
+    .powercon-home-controls > * {
+      width: 100%;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 350px) {
+
+      .powercon-record-grid {
+        grid-template-columns:
+          minmax(0, 1fr)
+          minmax(0, 1.25fr)
+          minmax(0, 0.95fr);
+
+        gap: 0.15rem;
+      }
+
+      .powercon-record-cell {
+        padding-left: 0.05rem;
+        padding-right: 0.05rem;
+      }
+
+      .powercon-record-value {
+        font-size: 0.62rem;
+        letter-spacing: -0.07em;
+      }
+
+      .powercon-record-label {
+        font-size: 0.48rem;
+      }
+
+      .powercon-action-btn {
         min-height: 50px;
         padding-left: 0.45rem;
         padding-right: 0.45rem;
         font-size: 0.62rem;
         letter-spacing: 0.015em;
-    }
-}
+      }
 
-@media (min-width: 351px) and (max-width: 430px) {
-    .powercon-action-btn {
+    }
+
+    @media (min-width: 351px) and (max-width: 430px) {
+
+      .powercon-record-value {
+        font-size: clamp(
+          0.68rem,
+          3.8vw,
+          1rem
+        );
+
+        letter-spacing: -0.06em;
+      }
+
+      .powercon-action-btn {
         font-size: 0.7rem;
-    }
-}
+      }
 
-@media (min-width: 431px) {
-    .powercon-action-btn {
+    }
+
+    @media (min-width: 431px) {
+
+      .powercon-record-grid {
+        gap: 0.65rem;
+      }
+
+      .powercon-record-value {
+        font-size: 1.15rem;
+        letter-spacing: -0.04em;
+      }
+
+      .powercon-action-btn {
         font-size: 0.78rem;
+      }
+
     }
-}
-     /* =========================================================
-   HOME — VIEW LOGSHEETS BUTTON
-   Default = WHITE + BLACK TEXT
-   Isolated from other UI components
-   ========================================================= */
 
-.powercon-view-logsheet-btn {
-    background: #ffffff;
-    color: #0f172a !important;
+    @media (min-width: 640px) {
 
-    border: 1px solid rgba(15, 23, 42, 0.08);
+      .powercon-reading-number {
+        font-size: 1.8rem;
+      }
 
-    box-shadow:
-        0 4px 14px rgba(15, 23, 42, 0.10);
+      .powercon-current-input {
+        font-size: 3.5rem;
+      }
 
-    text-shadow: none;
+      .powercon-record-value {
+        font-size: 1.2rem;
+        letter-spacing: -0.035em;
+      }
 
-    -webkit-font-smoothing: antialiased;
-}
+    }
 
-.powercon-view-logsheet-btn:hover {
-    background: #f8fafc;
-}
-
-.powercon-view-logsheet-btn:active {
-    transform: scale(0.98);
-}
-     
-/* =========================================================
-   POWERCON HOME — CENTERED CONTROLS
-   ========================================================= */
-
-.powercon-home-controls {
-    width: 100%;
-    max-width: 360px;
-
-    margin: auto;
-
-    display: flex;
-    flex-direction: column;
-
-    justify-content: center;
-    align-items: center;
-}
-
-/* Keep every control full width */
-.powercon-home-controls > * {
-    width: 100%;
-}
-</style>
+  </style>
 </head>
+
 <body id="bodyBg" class="h-full light-mode">
 
   <div id="app" class="h-full w-full"></div>
 
+  <!-- =========================================================
+       SETTINGS MODAL
+       ========================================================= -->
+
   <div id="settingsModal" class="modal hidden">
+
     <div class="modal-content rounded-[2.5rem] p-8 w-full max-w-xs shadow-2xl">
+
       <div class="text-center mb-6">
-          <h2 class="text-lg font-black uppercase italic text-emerald-500">UI Settings</h2>
-          <p class="text-[8px] font-bold opacity-50 uppercase tracking-widest">Personalize Your POWERCON apps background</p>
+
+        <h2 class="text-lg font-black uppercase italic text-emerald-500">
+          UI Settings
+        </h2>
+
+        <p class="text-[8px] font-bold opacity-50 uppercase tracking-widest">
+          Personalize Your POWERCON apps background
+        </p>
+
       </div>
+
       <div class="space-y-6">
+
         <div>
-           <label class="text-[9px] font-black uppercase mb-2 block opacity-60 text-center">Glass Opacity</label>
-           <input type="range" min="0.1" max="0.95" step="0.05" value="0.80" class="w-full h-1 bg-emerald-500/20 rounded-lg accent-emerald-500" oninput="updateOpacity(this.value)">
+
+          <label class="text-[9px] font-black uppercase mb-2 block opacity-60 text-center">
+            Glass Opacity
+          </label>
+
+          <input
+            type="range"
+            min="0.1"
+            max="0.95"
+            step="0.05"
+            value="0.80"
+            class="w-full h-1 bg-emerald-500/20 rounded-lg accent-emerald-500"
+            oninput="updateOpacity(this.value)"
+          >
+
         </div>
+
         <div>
-            <label class="text-[9px] font-black uppercase mb-3 block opacity-60 text-center">Color Themes</label>
-            <div class="grid grid-cols-4 gap-y-4 gap-x-2">
-                <div onclick="setBg('#f8fafc', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-slate-100 border"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Snow</span>
-                </div>
-                <div onclick="setBg('#eff6ff', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-blue-100 border"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Sky</span>
-                </div>
-                <div onclick="setBg('#fff1f2', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-rose-100 border"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Rose</span>
-                </div>
-                <div onclick="setBg('#fefce8', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-yellow-50 border border-yellow-200"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Cream</span>
-                </div>
-                <div onclick="setBg('#0f172a', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-slate-900"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Night</span>
-                </div>
-                <div onclick="setBg('#064e3b', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-emerald-950"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Forest</span>
-                </div>
-                <div onclick="setBg('#450a0a', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-red-950"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Ruby</span>
-                </div>
-                <div onclick="setBg('#1c1917', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="theme-preview bg-stone-900"></div>
-                    <span class="text-[7px] font-bold uppercase opacity-60">Earth</span>
-                </div>
+
+          <label class="text-[9px] font-black uppercase mb-3 block opacity-60 text-center">
+            Color Themes
+          </label>
+
+          <div class="grid grid-cols-4 gap-y-4 gap-x-2">
+
+            <div onclick="setBg('#f8fafc', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-slate-100 border"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Snow</span>
             </div>
+
+            <div onclick="setBg('#eff6ff', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-blue-100 border"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Sky</span>
+            </div>
+
+            <div onclick="setBg('#fff1f2', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-rose-100 border"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Rose</span>
+            </div>
+
+            <div onclick="setBg('#fefce8', 'light')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-yellow-50 border border-yellow-200"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Cream</span>
+            </div>
+
+            <div onclick="setBg('#0f172a', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-slate-900"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Night</span>
+            </div>
+
+            <div onclick="setBg('#064e3b', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-emerald-950"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Forest</span>
+            </div>
+
+            <div onclick="setBg('#450a0a', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-red-950"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Ruby</span>
+            </div>
+
+            <div onclick="setBg('#1c1917', 'dark')" class="flex flex-col items-center gap-1 cursor-pointer">
+              <div class="theme-preview bg-stone-900"></div>
+              <span class="text-[7px] font-bold uppercase opacity-60">Earth</span>
+            </div>
+
+          </div>
+
         </div>
-        <button onclick="document.getElementById('bgUpload').click()" class="w-full py-4 bg-emerald-500/10 rounded-2xl text-[10px] font-black uppercase border border-emerald-500/20">Upload your Image</button>
-        <input type="file" id="bgUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+
+        <button
+          onclick="document.getElementById('bgUpload').click()"
+          class="w-full py-4 bg-emerald-500/10 rounded-2xl text-[10px] font-black uppercase border border-emerald-500/20"
+        >
+          Upload your Image
+        </button>
+
+        <input
+          type="file"
+          id="bgUpload"
+          accept="image/*"
+          class="hidden"
+          onchange="handleImageUpload(event)"
+        >
+
       </div>
-      <button onclick="toggleSettings()" class="mt-8 w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase">Save & Exit</button>
-      <button onclick="restoreDefaults()" class="w-full py-3 mt-2 bg-rose-500/10 text-rose-500 rounded-2xl text-[9px] font-black uppercase border border-rose-500/20 active:scale-95 transition-all">
-    Restore Defaults ↺
-</button>
+
+      <button
+        onclick="toggleSettings()"
+        class="mt-8 w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase"
+      >
+        Save & Exit
+      </button>
+
+      <button
+        onclick="restoreDefaults()"
+        class="w-full py-3 mt-2 bg-rose-500/10 text-rose-500 rounded-2xl text-[9px] font-black uppercase border border-rose-500/20 active:scale-95 transition-all"
+      >
+        Restore Defaults ↺
+      </button>
+
     </div>
+
   </div>
 
+
   <script>
-   const firebaseConfig = { apiKey: "AIzaSyCwtWs9YdZMojl1FwQNXbAF-QRhWCrlWMQ", authDomain: "powercon-nutriveb.firebaseapp.com", projectId: "powercon-nutriveb", storageBucket: "powercon-nutriveb.firebasestorage.app", messagingSenderId: "780606101460", appId: "1:780606101460:web:ce9b6c7b73bb756a5a6841", databaseURL: "https://powercon-nutriveb-default-rtdb.asia-southeast1.firebasedatabase.app" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
-const MOCK_EQUIPMENT = [ 
-    { id: '1', name: 'Refrigeration System', loc: 'UTILITIES' },
-    { id: '4', name: 'Condensate Return System', loc: 'UTILITIES' },
-    { id: '2', name: 'Clean Steam Generator', loc: 'UTILITIES' }, 
-    { id: '3', name: 'Bulk Chemical System', loc: 'UTILITIES' },  
-    { id: '5', name: 'RVAC', loc: 'UTILITIES' },
-    { id: '9', name: 'Water Treatment Plant (WTP)', loc: 'UTILITIES' },
-    { id: '6', name: 'BOILER', loc: 'UTILITIES' }, 
-    { id: '7', name: 'Compressed Dry Air (CDA)', loc: 'UTILITIES' }, 
-    { id: '8', name: 'Waste Water Treatment Plant (WWTP)', loc: 'UTILITIES' }, 
-    { id: '21', name: 'Soya Bean Pre-treatment & Handling', loc: 'PROCESS' },
-    { id: '10', name: 'Combined Water Storage (CWS)', loc: 'UTILITIES' }, 
-    { id: '11', name: 'Sump Pit Pump 1', loc: 'UTILITIES' }, 
-    { id: '12', name: 'Freezer & Cold Storage', loc: 'UTILITIES' },
-    { id: '18', name: 'Alwin Soy', loc: 'PROCESS' },
-    { id: '20', name: 'Homogenizer', loc: 'PROCESS' },
-    { id: '16', name: 'Container Conveyor (E10)', loc: 'PROCESS' },
-    { id: '19', name: 'Process MCC', loc: 'PROCESS' },
-    { id: '14', name: 'Bottle Washer (E8)', loc: 'PROCESS' },
-    { id: '30', name: 'Ups', loc: 'BOTTLING' },
-    { id: '26', name: 'Container Depalettiser (E4)', loc: 'BOTTLING' },
-    { id: '29', name: 'Pack Conveyor (E12)', loc: 'BOTTLING' },
-    { id: '22', name: 'Sugar Dissolving', loc: 'PROCESS' },
-    { id: '32', name: 'Hydro Sterilizer', loc: 'BOTTLING' },
-    { id: '31', name: 'Wrap Round', loc: 'BOTTLING' },
-    { id: '15', name: 'Modular Labeller (E9)', loc: 'PROCESS' },
-    { id: '33', name: 'Filler', loc: 'BOTTLING' },
-    { id: '23', name: 'Container Dryer (E1)', loc: 'BOTTLING' },
-    { id: '25', name: 'Unpacker (E3)', loc: 'BOTTLING' },
-    { id: '13', name: 'CIP Line (E7)', loc: 'PROCESS' }, 
-    { id: '17', name: 'Conveyor Lubrication (E11)', loc: 'PROCESS' },
-    { id: '24', name: 'Packer (E2)', loc: 'BOTTLING' },
-    { id: '27', name: 'Pack Washing (E5)', loc: 'BOTTLING' },
-    { id: '28', name: 'Inspector (E6)', loc: 'BOTTLING' },
-    { id: '41', name: 'Accumulation Table', loc: 'LVSG 5 LOADS' },               
-    { id: '39', name: 'DP-WM', loc: 'LVSG 5 LOADS' },
-    { id: '34', name: 'DPP', loc: 'LVSG 5 LOADS' },
-    { id: '40', name: 'Sumppit Pump2', loc: 'LVSG 5 LOADS' },
-    { id: '38', name: 'WWTP (220V)', loc: 'LVSG 5 LOADS' },
-    { id: '35', name: 'DLP', loc: 'LVSG 5 LOADS' },
-    { id: '36', name: 'WareHouse', loc: 'LVSG 5 LOADS' },
-    { id: '37', name: 'RVAC (220V)', loc: 'LVSG 5 LOADS' }
-]; 
+    /* =========================================================
+       FIREBASE
+       ========================================================= */
 
-const getLocalDate = (d) => { const offset = d.getTimezoneOffset(); const localDate = new Date(d.getTime() - (offset * 60 * 1000)); return localDate.toISOString().split('T')[0]; };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwtWs9YdZMojl1FwQNXbAF-QRhWCrlWMQ",
+      authDomain: "powercon-nutriveb.firebaseapp.com",
+      projectId: "powercon-nutriveb",
+      storageBucket: "powercon-nutriveb.firebasestorage.app",
+      messagingSenderId: "780606101460",
+      appId: "1:780606101460:web:ce9b6c7b73bb756a5a6841",
+      databaseURL: "https://powercon-nutriveb-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
 
-let pressTimer;
-let isLongPress = false;
+    firebase.initializeApp(firebaseConfig);
 
-document.addEventListener('keydown', (e) => {
-    if(app.state.view !== 'reading') return;
-    const key = e.key;
-    if(/[0-9]/.test(key)) { handleKey(key); animateKey(key); }
-    else if(key === '.') { handleKey('.'); animateKey('.'); }
-    else if(key === 'Backspace') { handleKey('⌫'); animateKey('⌫'); }
-    else if(key === 'Enter') { window.enterNext(); }
-});
+    const db = firebase.database();
 
-function animateKey(k) {
-    const btn = Array.from(document.querySelectorAll('.num-btn')).find(b => b.innerText === k);
-    if(btn) { btn.classList.add('active-key'); setTimeout(() => btn.classList.remove('active-key'), 100); }
-}
 
-const formatUsageDisplay = (value) => {
-    const num = parseFloat(value);
+    /* =========================================================
+       EQUIPMENT
+       ========================================================= */
 
-    if (!Number.isFinite(num) || num === 0) {
+    const MOCK_EQUIPMENT = [
+
+      { id: '1', name: 'Refrigeration System', loc: 'UTILITIES' },
+      { id: '4', name: 'Condensate Return System', loc: 'UTILITIES' },
+      { id: '2', name: 'Clean Steam Generator', loc: 'UTILITIES' },
+      { id: '3', name: 'Bulk Chemical System', loc: 'UTILITIES' },
+      { id: '5', name: 'RVAC', loc: 'UTILITIES' },
+      { id: '9', name: 'Water Treatment Plant (WTP)', loc: 'UTILITIES' },
+      { id: '6', name: 'BOILER', loc: 'UTILITIES' },
+      { id: '7', name: 'Compressed Dry Air (CDA)', loc: 'UTILITIES' },
+      { id: '8', name: 'Waste Water Treatment Plant (WWTP)', loc: 'UTILITIES' },
+
+      { id: '21', name: 'Soya Bean Pre-treatment & Handling', loc: 'PROCESS' },
+      { id: '10', name: 'Combined Water Storage (CWS)', loc: 'UTILITIES' },
+      { id: '11', name: 'Sump Pit Pump 1', loc: 'UTILITIES' },
+      { id: '12', name: 'Freezer & Cold Storage', loc: 'UTILITIES' },
+      { id: '18', name: 'Alwin Soy', loc: 'PROCESS' },
+      { id: '20', name: 'Homogenizer', loc: 'PROCESS' },
+      { id: '16', name: 'Container Conveyor (E10)', loc: 'PROCESS' },
+      { id: '19', name: 'Process MCC', loc: 'PROCESS' },
+      { id: '14', name: 'Bottle Washer (E8)', loc: 'PROCESS' },
+
+      { id: '30', name: 'Ups', loc: 'BOTTLING' },
+      { id: '26', name: 'Container Depalettiser (E4)', loc: 'BOTTLING' },
+      { id: '29', name: 'Pack Conveyor (E12)', loc: 'BOTTLING' },
+      { id: '22', name: 'Sugar Dissolving', loc: 'PROCESS' },
+      { id: '32', name: 'Hydro Sterilizer', loc: 'BOTTLING' },
+      { id: '31', name: 'Wrap Round', loc: 'BOTTLING' },
+      { id: '15', name: 'Modular Labeller (E9)', loc: 'PROCESS' },
+      { id: '33', name: 'Filler', loc: 'BOTTLING' },
+      { id: '23', name: 'Container Dryer (E1)', loc: 'BOTTLING' },
+      { id: '25', name: 'Unpacker (E3)', loc: 'BOTTLING' },
+      { id: '13', name: 'CIP Line (E7)', loc: 'PROCESS' },
+      { id: '17', name: 'Conveyor Lubrication (E11)', loc: 'PROCESS' },
+      { id: '24', name: 'Packer (E2)', loc: 'BOTTLING' },
+      { id: '27', name: 'Pack Washing (E5)', loc: 'BOTTLING' },
+      { id: '28', name: 'Inspector (E6)', loc: 'BOTTLING' },
+
+      { id: '41', name: 'Accumulation Table', loc: 'LVSG 5 LOADS' },
+      { id: '39', name: 'DP-WM', loc: 'LVSG 5 LOADS' },
+      { id: '34', name: 'DPP', loc: 'LVSG 5 LOADS' },
+      { id: '40', name: 'Sumppit Pump2', loc: 'LVSG 5 LOADS' },
+      { id: '38', name: 'WWTP (220V)', loc: 'LVSG 5 LOADS' },
+      { id: '35', name: 'DLP', loc: 'LVSG 5 LOADS' },
+      { id: '36', name: 'WareHouse', loc: 'LVSG 5 LOADS' },
+      { id: '37', name: 'RVAC (220V)', loc: 'LVSG 5 LOADS' }
+
+    ];
+
+
+    /* =========================================================
+       UTILS
+       ========================================================= */
+
+    const getLocalDate = (d) => {
+
+      const offset = d.getTimezoneOffset();
+
+      const localDate =
+        new Date(d.getTime() - (offset * 60 * 1000));
+
+      return localDate.toISOString().split('T')[0];
+
+    };
+
+
+    const formatUsageDisplay = (value) => {
+
+      const num = parseFloat(value);
+
+      if (!Number.isFinite(num) || num === 0) {
         return '0';
+      }
+
+      return String(value);
+
+    };
+
+
+    let pressTimer;
+    let isLongPress = false;
+
+
+    /* =========================================================
+       KEYBOARD SUPPORT
+       ========================================================= */
+
+    document.addEventListener('keydown', (e) => {
+
+      if (!window.app || app.state.view !== 'reading') return;
+
+      const key = e.key;
+
+      if (/[0-9]/.test(key)) {
+
+        handleKey(key);
+        animateKey(key);
+
+      }
+
+      else if (key === '.') {
+
+        handleKey('.');
+        animateKey('.');
+
+      }
+
+      else if (key === 'Backspace') {
+
+        handleKey('⌫');
+        animateKey('⌫');
+
+      }
+
+      else if (key === 'Enter') {
+
+        window.enterNext();
+
+      }
+
+    });
+
+
+    function animateKey(k) {
+
+      const btn =
+        Array.from(document.querySelectorAll('.num-btn'))
+          .find(b => b.innerText.trim() === k);
+
+      if (btn) {
+
+        btn.classList.add('active-key');
+
+        setTimeout(() => {
+          btn.classList.remove('active-key');
+        }, 100);
+
+      }
+
     }
 
-    return String(value);
-};
 
-class PowerCon {
-  constructor() {
-    this.state = { view: 'home', currentIndex: 0, date: getLocalDate(new Date()), filterDate: getLocalDate(new Date()), sessionReadings: [], cloudReadings: {}, yesterdayReadings: {}, loading: false, isSingleEdit: false, isEditingFromReview: false};
-    this.init();
-  }
-  async init() { loadSavedTheme(); this.render(); await this.syncWithCloud(); }
-  
-  async syncWithCloud(targetDate = null) {
-    this.state.loading = true; this.render();
-    const dateToQuery = targetDate || this.state.date;
-    try {
-      const snapshot = await db.ref('readings/' + dateToQuery).once('value');
-      this.state.cloudReadings = snapshot.val() || {};
-      const d = new Date(dateToQuery); d.setDate(d.getDate() - 1);
-      const yKey = getLocalDate(d);
-      const ySnap = await db.ref('readings/' + yKey).once('value');
-      this.state.yesterdayReadings = ySnap.val() || {};
-      MOCK_EQUIPMENT.forEach((eq, i) => { if(this.state.cloudReadings[eq.id]) this.state.sessionReadings[i] = this.state.cloudReadings[eq.id]; });
-    } catch(e) { console.error(e); }
-    this.state.loading = false; this.render();
-  }
+    /* =========================================================
+       POWERCON CLASS
+       ========================================================= */
 
-  render() { document.getElementById('app').innerHTML = this[`${this.state.view}HTML`](); }
+    class PowerCon {
 
-homeHTML() {
-    return `
-<div class="flex flex-col min-h-screen"> 
-    <header class="w-full bg-white/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-10 px-6 py-4">
-        <div class="max-w-md mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="assets/abnlogo.svg" alt="ABN Logo" class="w-10 h-10 object-contain">
+      constructor() {
+
+        this.state = {
+
+          view: 'home',
+
+          currentIndex: 0,
+
+          date: getLocalDate(new Date()),
+
+          filterDate: getLocalDate(new Date()),
+
+          sessionReadings: [],
+
+          cloudReadings: {},
+
+          yesterdayReadings: {},
+
+          loading: false,
+
+          isSingleEdit: false,
+
+          isEditingFromReview: false,
+
+          /*
+           * NEW
+           *
+           * null      = normal reading
+           * previous  = admin editing previous
+           * current   = admin editing current
+           */
+          editField: null
+
+        };
+
+        this.init();
+
+      }
+
+
+      async init() {
+
+        loadSavedTheme();
+
+        this.render();
+
+        await this.syncWithCloud();
+
+      }
+
+
+      /* =======================================================
+         FIREBASE SYNC
+         ======================================================= */
+
+      async syncWithCloud(targetDate = null) {
+
+        this.state.loading = true;
+
+        this.render();
+
+        const dateToQuery =
+          targetDate || this.state.date;
+
+        try {
+
+          const snapshot =
+            await db
+              .ref('readings/' + dateToQuery)
+              .once('value');
+
+          this.state.cloudReadings =
+            snapshot.val() || {};
+
+
+          const d = new Date(dateToQuery);
+
+          d.setDate(d.getDate() - 1);
+
+          const yKey = getLocalDate(d);
+
+          const ySnap =
+            await db
+              .ref('readings/' + yKey)
+              .once('value');
+
+          this.state.yesterdayReadings =
+            ySnap.val() || {};
+
+
+          MOCK_EQUIPMENT.forEach((eq, i) => {
+
+            if (this.state.cloudReadings[eq.id]) {
+
+              this.state.sessionReadings[i] =
+                this.state.cloudReadings[eq.id];
+
+            }
+
+          });
+
+        }
+
+        catch (e) {
+
+          console.error(e);
+
+        }
+
+        this.state.loading = false;
+
+        this.render();
+
+      }
+
+
+      render() {
+
+        document.getElementById('app').innerHTML =
+          this[`${this.state.view}HTML`]();
+
+      }
+
+
+      /* =======================================================
+         HOME
+         ======================================================= */
+
+      homeHTML() {
+
+        return `
+
+        <div class="flex flex-col min-h-screen">
+
+          <header
+            class="w-full bg-white/20 backdrop-blur-md
+                   border-b border-white/10 sticky top-0 z-10
+                   px-6 py-4"
+          >
+
+            <div class="max-w-md mx-auto flex items-center justify-between">
+
+              <div class="flex items-center gap-3">
+
+                <img
+                  src="assets/abnlogo.svg"
+                  alt="ABN Logo"
+                  class="w-10 h-10 object-contain"
+                >
+
                 <div class="flex flex-col">
-                    <h1 class="text-2xl font-black italic tracking-tighter leading-none">
-                        POWER<span class="text-emerald-500">CON</span>
-                    </h1>
-                    <span class="text-[8px] font-bold uppercase tracking-widest opacity-50">Nutribev Corporation</span>
+
+                  <h1
+                    class="text-2xl font-black italic
+                           tracking-tighter leading-none"
+                  >
+                    POWER<span class="text-emerald-500">CON</span>
+                  </h1>
+
+                  <span
+                    class="text-[8px] font-bold uppercase
+                           tracking-widest opacity-50"
+                  >
+                    Nutribev Corporation
+                  </span>
+
                 </div>
+
+              </div>
+
+
+              <button
+                onclick="toggleSettings()"
+                class="p-2 bg-white/20 rounded-full
+                       border border-white/20"
+              >
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="opacity-60"
+                >
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+
+              </button>
+
             </div>
-            <button onclick="toggleSettings()" class="p-2 bg-white/20 rounded-full border border-white/20">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-60"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-        </div>
-    </header>
 
-   <main class="flex-grow flex flex-col p-8 max-w-sm mx-auto w-full">
+          </header>
 
-    <!-- =====================================================
-         CENTERED POWERCON CONTROLS
-         Calendar + Start Reading + View Logsheets
-         ===================================================== -->
-    <div class="powercon-home-controls">
 
-        <!-- READING DATE -->
-        <div class="glass-card rounded-[2.5rem] p-6 mb-4
-                    border border-white/20 shadow-xl bg-white/30">
+          <main
+            class="flex-grow flex flex-col
+                   p-8 max-w-sm mx-auto w-full"
+          >
 
-            <label
-                class="text-[9px] font-black uppercase mb-3 block
-                       tracking-widest opacity-60 text-center"
+            <div class="powercon-home-controls">
+
+              <div
+                class="glass-card rounded-[2.5rem] p-6 mb-4
+                       border border-white/20 shadow-xl bg-white/30"
+              >
+
+                <label
+                  class="text-[9px] font-black uppercase mb-3
+                         block tracking-widest opacity-60 text-center"
+                >
+                  Reading Date
+                </label>
+
+                <input
+                  type="date"
+                  value="${this.state.date}"
+                  class="w-full bg-white/50 border-2
+                         border-emerald-500/20 p-4 rounded-2xl
+                         font-bold text-center outline-none
+                         focus:border-emerald-500 transition-all
+                         text-current"
+                  onchange="
+                    app.state.date=this.value;
+                    app.syncWithCloud()
+                  "
+                >
+
+              </div>
+
+
+              <button
+                onclick="app.start()"
+                class="w-full bg-emerald-600 text-white
+                       font-black py-6 rounded-[2rem]
+                       shadow-lg shadow-emerald-500/20
+                       text-xl mb-3
+                       active:scale-95 transition-all"
+              >
+                START READING
+              </button>
+
+
+              <button
+                onclick="
+                  app.state.view='records';
+                  app.state.filterDate=app.state.date;
+                  app.syncWithCloud(app.state.date)
+                "
+                class="powercon-view-logsheet-btn w-full
+                       font-bold py-5 rounded-[2rem]
+                       text-xs uppercase tracking-widest
+                       active:scale-95 transition-all"
+              >
+                VIEW LOGSHEETS
+              </button>
+
+            </div>
+
+
+            <p
+              class="text-[8px] font-bold opacity-30
+                     uppercase tracking-widest
+                     text-center mt-auto pb-4"
             >
-                Reading Date
-            </label>
+              © ${new Date().getFullYear()} Nutribev Corporation
+            </p>
 
-            <input
-                type="date"
-                value="${this.state.date}"
-                class="w-full bg-white/50 border-2
-                       border-emerald-500/20 p-4 rounded-2xl
-                       font-bold text-center outline-none
-                       focus:border-emerald-500 transition-all
-                       text-current"
-                onchange="app.state.date=this.value; app.syncWithCloud()"
-            >
+          </main>
 
         </div>
 
-        <!-- START READING -->
-        <button
-            onclick="app.start()"
-            class="w-full bg-emerald-600 text-white
-                   font-black py-6 rounded-[2rem]
-                   shadow-lg shadow-emerald-500/20
-                   text-xl mb-3
-                   active:scale-95 transition-all"
-        >
-            START READING
-        </button>
+        `;
 
-        <!-- VIEW LOGSHEETS -->
-        <button
-            onclick="app.state.view='records';app.state.filterDate=app.state.date;app.syncWithCloud(app.state.date)"
-            class="powercon-view-logsheet-btn w-full
-                   font-bold py-5 rounded-[2rem]
-                   text-xs uppercase tracking-widest
-                   active:scale-95 transition-all"
-        >
-            VIEW LOGSHEETS
-        </button>
+      }
 
-    </div>
 
-    <!-- COPYRIGHT -->
-    <p
-        class="text-[8px] font-bold opacity-30
-               uppercase tracking-widest
-               text-center mt-auto pb-4"
-    >
-        © ${new Date().getFullYear()} Nutribev Corporation
-    </p>
+      /* =======================================================
+         READING
+         ======================================================= */
 
-</main>
-</div>`;}
+      readingHTML() {
 
-  readingHTML() {
-    const eq = MOCK_EQUIPMENT[this.state.currentIndex];
+        const eq =
+          MOCK_EQUIPMENT[this.state.currentIndex];
 
-    const progress =
-        ((this.state.currentIndex + 1) / MOCK_EQUIPMENT.length) * 100;
 
-    // =====================================================
-    // EXISTING LOGIC — HINDI BINAGO
-    // Previous reading comes from yesterday's current
-    // =====================================================
+        const progress =
+          ((this.state.currentIndex + 1) /
+            MOCK_EQUIPMENT.length) * 100;
 
-    let autoPrev =
-        (this.state.yesterdayReadings &&
-         this.state.yesterdayReadings[eq.id])
+
+        const existingRecord =
+          this.state.cloudReadings &&
+          this.state.cloudReadings[eq.id];
+
+
+        /*
+         * NORMAL MODE
+         *
+         * Previous comes from yesterday's current.
+         */
+        let autoPrev =
+          (
+            this.state.yesterdayReadings &&
+            this.state.yesterdayReadings[eq.id]
+          )
             ? this.state.yesterdayReadings[eq.id].curr
             : '0.000';
 
-    return `
-    <div class="p-3 sm:p-4 max-w-xl mx-auto min-h-screen flex flex-col">
 
-        <!-- PROGRESS -->
-        <div class="w-full h-1.5 bg-emerald-900/10 rounded-full mb-4 overflow-hidden">
-            <div
-                class="h-full bg-emerald-500 transition-all duration-300"
-                style="width:${progress}%"
-            ></div>
-        </div>
+        /*
+         * EDIT MODE
+         *
+         * Always use the EXISTING FIREBASE record.
+         */
+        let previousValue =
+          existingRecord
+            ? String(existingRecord.prev ?? '0')
+            : String(autoPrev);
 
-      <!-- =================================================
-     PROGRESS NUMBER
-     ================================================= -->
-<div class="flex items-center justify-end mb-3">
 
-    <span class="text-xs font-bold font-mono-numbers opacity-50">
-        ${this.state.currentIndex + 1}/${MOCK_EQUIPMENT.length}
-    </span>
+        let currentValue =
+          existingRecord
+            ? String(existingRecord.curr ?? '0')
+            : '';
 
-</div>
 
-<!-- =================================================
-     EQUIPMENT — CENTERED / PROMINENT / HIGHLIGHTED
-     ================================================= -->
-<div class="powercon-equipment-badge mb-3">
-    ${eq.name}
-</div>
+        const isAdminEdit =
+          this.state.isSingleEdit &&
+          !!existingRecord;
 
-<div class="text-center text-[8px] sm:text-[9px]
-            font-black uppercase tracking-widest
-            opacity-50 mb-4">
-    ${eq.loc}
-</div>
 
-        <!-- =================================================
-             PREVIOUS READING
-             ================================================= -->
-        <div class="glass-card p-4 sm:p-5 rounded-2xl mb-3 text-center border border-white/10">
+        /*
+         * Which value should the keypad edit?
+         */
+        const activeEditField =
+          this.state.editField || 'current';
 
-            <div class="powercon-reading-label opacity-50 mb-2">
-                Previous Reading
-            </div>
 
-            <div class="powercon-reading-number">
-                ${autoPrev}
-            </div>
+        /*
+         * Keypad input initial value.
+         *
+         * NORMAL:
+         * blank
+         *
+         * ADMIN:
+         * selected existing value
+         */
+        const keypadValue =
+          isAdminEdit
+            ? (
+                activeEditField === 'previous'
+                  ? previousValue
+                  : currentValue
+              )
+            : '';
 
-        </div>
 
-        <!-- =================================================
-             CURRENT INPUT — HIGHLIGHTED
-             ================================================= -->
+        return `
+
         <div
-            class="glass-card p-4 sm:p-6 rounded-[1.5rem] mb-4
-                   border-2 border-emerald-500
-                   shadow-xl shadow-emerald-500/10
-                   bg-emerald-500/5"
+          class="p-3 sm:p-4 max-w-xl mx-auto
+                 min-h-screen flex flex-col"
         >
 
-            <label class="powercon-reading-label block text-center text-emerald-500 mb-3">
-                Current Input
+          <!-- PROGRESS -->
+
+          <div
+            class="w-full h-1.5 bg-emerald-900/10
+                   rounded-full mb-4 overflow-hidden"
+          >
+
+            <div
+              class="h-full bg-emerald-500
+                     transition-all duration-300"
+              style="width:${progress}%"
+            ></div>
+
+          </div>
+
+
+          <!-- PROGRESS NUMBER -->
+
+          <div class="flex items-center justify-end mb-3">
+
+            <span
+              class="text-xs font-bold
+                     font-mono-numbers opacity-50"
+            >
+              ${this.state.currentIndex + 1}/${MOCK_EQUIPMENT.length}
+            </span>
+
+          </div>
+
+
+          <!-- EQUIPMENT -->
+
+          <div class="powercon-equipment-badge mb-3">
+            ${eq.name}
+          </div>
+
+
+          <div
+            class="text-center text-[8px] sm:text-[9px]
+                   font-black uppercase tracking-widest
+                   opacity-50 mb-4"
+          >
+            ${eq.loc}
+          </div>
+
+
+          ${
+            isAdminEdit
+              ? `
+
+              <!-- =================================================
+                   ADMIN EDIT MODE
+                   ================================================= -->
+
+              <div
+                class="glass-card rounded-[1.5rem]
+                       p-3 mb-4
+                       border border-emerald-500/20
+                       bg-emerald-500/5"
+              >
+
+                <div class="text-center mb-3">
+
+                  <div
+                    class="text-[10px] font-black uppercase
+                           text-emerald-500 tracking-widest"
+                  >
+                    ADMIN EDIT MODE
+                  </div>
+
+                  <div class="powercon-edit-help mt-1">
+                    Tap Previous or Current to choose what to edit
+                  </div>
+
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-3">
+
+
+                  <!-- =================================================
+                       PREVIOUS EDIT BOX
+                       ================================================= -->
+
+                  <div
+                    id="edit-box-previous"
+                    onclick="app.selectEditField('previous')"
+                    class="
+                      powercon-edit-box
+                      ${
+                        activeEditField === 'previous'
+                          ? 'powercon-edit-selected'
+                          : ''
+                      }
+                      glass-card
+                      rounded-2xl
+                      p-4
+                      text-center
+                      border
+                      border-white/10
+                      bg-black/5
+                    "
+                  >
+
+                    <div
+                      class="flex items-center
+                             justify-center gap-1 mb-2"
+                    >
+
+                      <span
+                        class="text-[8px]
+                               font-black uppercase
+                               opacity-50"
+                      >
+                        Previous
+                      </span>
+
+                      <span
+                        class="edit-active-indicator
+                               text-[8px] text-emerald-500
+                               font-black"
+                      >
+                        ✎
+                      </span>
+
+                    </div>
+
+
+                    <div
+                      class="font-mono-numbers
+                             font-black
+                             text-lg
+                             break-all"
+                    >
+                      ${previousValue}
+                    </div>
+
+                  </div>
+
+
+                  <!-- =================================================
+                       CURRENT EDIT BOX
+                       ================================================= -->
+
+                  <div
+                    id="edit-box-current"
+                    onclick="app.selectEditField('current')"
+                    class="
+                      powercon-edit-box
+                      ${
+                        activeEditField === 'current'
+                          ? 'powercon-edit-selected'
+                          : ''
+                      }
+                      glass-card
+                      rounded-2xl
+                      p-4
+                      text-center
+                      border
+                      border-emerald-500/20
+                      bg-emerald-500/10
+                    "
+                  >
+
+                    <div
+                      class="flex items-center
+                             justify-center gap-1 mb-2"
+                    >
+
+                      <span
+                        class="text-[8px]
+                               font-black uppercase
+                               text-emerald-500"
+                      >
+                        Current
+                      </span>
+
+                      <span
+                        class="edit-active-indicator
+                               text-[8px] text-emerald-500
+                               font-black"
+                      >
+                        ✎
+                      </span>
+
+                    </div>
+
+
+                    <div
+                      class="font-mono-numbers
+                             font-black
+                             text-lg
+                             break-all
+                             text-emerald-500"
+                    >
+                      ${currentValue}
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              `
+              : `
+
+              <!-- =================================================
+                   NORMAL PREVIOUS READING
+                   ================================================= -->
+
+              <div
+                class="glass-card p-4 sm:p-5
+                       rounded-2xl mb-3
+                       text-center border border-white/10"
+              >
+
+                <div
+                  class="powercon-reading-label
+                         opacity-50 mb-2"
+                >
+                  Previous Reading
+                </div>
+
+                <div class="powercon-reading-number">
+                  ${autoPrev}
+                </div>
+
+              </div>
+
+              `
+          }
+
+
+          <!-- =================================================
+               ACTIVE INPUT
+               ================================================= -->
+
+          <div
+            class="
+              glass-card
+              p-4 sm:p-6
+              rounded-[1.5rem]
+              mb-4
+              border-2
+              border-emerald-500
+              shadow-xl
+              shadow-emerald-500/10
+              bg-emerald-500/5
+            "
+          >
+
+            <label
+              class="
+                powercon-reading-label
+                block
+                text-center
+                text-emerald-500
+                mb-3
+              "
+            >
+              ${
+                isAdminEdit
+                  ? (
+                      activeEditField === 'previous'
+                        ? 'Editing Previous'
+                        : 'Editing Current'
+                    )
+                  : 'Current Input'
+              }
             </label>
 
+
+            <!--
+              IMPORTANT:
+              Hidden previous input fixes the old
+              handleKey() bug where #p did not exist.
+            -->
+
             <input
-                type="text"
-                id="c"
-                class="powercon-current-input bg-transparent outline-none"
-                placeholder="0.000"
-                readonly
-                inputmode="decimal"
-                autocomplete="off"
+              type="hidden"
+              id="p"
+              value="${previousValue}"
             >
 
-        </div>
 
-        <!-- =================================================
-             KEYPAD
-             ================================================= -->
-        <div class="glass-card p-3 rounded-2xl mb-4">
+            <input
+              type="text"
+              id="c"
+              class="powercon-current-input bg-transparent
+                     outline-none"
+              value="${keypadValue}"
+              placeholder="0.000"
+              readonly
+              inputmode="decimal"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          ${
+            isAdminEdit
+              ? `
+                <div
+                  class="text-center text-[8px]
+                         font-black uppercase
+                         tracking-widest
+                         opacity-40
+                         mb-3"
+                >
+                  ${
+                    activeEditField === 'previous'
+                      ? 'Editing PREVIOUS reading'
+                      : 'Editing CURRENT reading'
+                  }
+                </div>
+              `
+              : ''
+          }
+
+
+          <!-- =================================================
+               KEYPAD
+               ================================================= -->
+
+          <div
+            class="glass-card p-3
+                   rounded-2xl mb-4"
+          >
 
             <div class="grid grid-cols-3 gap-2">
 
-                ${['1','2','3','4','5','6','7','8','9','.', '0', '⌫']
-                    .map(k => {
+              ${
+                [
+                  '1','2','3',
+                  '4','5','6',
+                  '7','8','9',
+                  '.', '0', '⌫'
+                ]
+                .map(k => {
 
-                        if (k === '0') {
-                            return `
-                            <button
-                                class="num-btn"
-                                onmousedown="startPress()"
-                                onmouseup="endPress('0')"
-                                ontouchstart="startPress(); event.preventDefault();"
-                                ontouchend="endPress('0'); event.preventDefault();"
-                            >
-                                ${k}
-                            </button>
-                            `;
-                        }
+                  if (k === '0') {
 
-                        return `
-                        <button
-                            class="num-btn"
-                            onclick="handleKey('${k}')"
-                        >
-                            ${k}
-                        </button>
-                        `;
+                    return `
+                      <button
+                        class="num-btn"
+                        onmousedown="startPress()"
+                        onmouseup="endPress('0')"
+                        ontouchstart="startPress(); event.preventDefault();"
+                        ontouchend="endPress('0'); event.preventDefault();"
+                      >
+                        ${k}
+                      </button>
+                    `;
 
-                    }).join('')}
+                  }
+
+                  return `
+                    <button
+                      class="num-btn"
+                      onclick="handleKey('${k}')"
+                    >
+                      ${k}
+                    </button>
+                  `;
+
+                })
+                .join('')
+              }
 
             </div>
 
-        </div>
+          </div>
 
-        <!-- =================================================
-             ACTION BUTTONS
-             ================================================= -->
-        <div class="grid grid-cols-2 gap-3 pb-4">
 
-            <button
-                onclick="app.exitReading()"
-                class="py-4 font-bold uppercase text-[10px] opacity-50 active:scale-95 transition-all"
-            >
-                Cancel
-            </button>
+          <!-- =================================================
+               ACTION BUTTONS
+               ================================================= -->
+
+          <div
+            class="grid grid-cols-2
+                   gap-3 pb-4"
+          >
 
             <button
-                onclick="window.enterNext()"
-                class="bg-emerald-600 text-white font-black py-4 rounded-2xl
-                       shadow-lg uppercase italic text-sm
-                       active:scale-[0.98] transition-all"
+              onclick="app.exitReading()"
+              class="
+                py-4
+                font-bold
+                uppercase
+                text-[10px]
+                opacity-50
+                active:scale-95
+                transition-all
+              "
             >
-                ${this.state.isEditingFromReview || this.state.isSingleEdit
-                    ? 'UPDATE READING ✓'
-                    : 'Submit & Next ➔'}
+              Cancel
             </button>
+
+
+            <button
+              onclick="window.enterNext()"
+              class="
+                bg-emerald-600
+                text-white
+                font-black
+                py-4
+                rounded-2xl
+                shadow-lg
+                uppercase
+                italic
+                text-sm
+                active:scale-[0.98]
+                transition-all
+              "
+            >
+              ${
+                this.state.isEditingFromReview ||
+                this.state.isSingleEdit
+                  ? 'UPDATE READING ✓'
+                  : 'Submit & Next ➔'
+              }
+            </button>
+
+          </div>
 
         </div>
 
-    </div>`;
-}
+        `;
 
-  recordsHTML() {
-    let grandTotal = 0;
+      }
 
-    MOCK_EQUIPMENT.forEach(eq => {
-        const r = this.state.cloudReadings[eq.id];
 
-        if (r && r.usage) {
-            grandTotal += parseFloat(r.usage) || 0;
+      /* =======================================================
+         SELECT EDIT FIELD
+         ======================================================= */
+
+      selectEditField(field) {
+
+        if (!this.state.isSingleEdit) {
+          return;
         }
-    });
 
-    const meta = this.state.cloudReadings['metadata'] || {};
 
-    const defaultColors = {
-        "UTILITIES": "#ef4444",
-        "PROCESS": "#3b82f6",
-        "BOTTLING": "#f59e0b",
-        "LVSG 5 LOADS": "#10b981"
-    };
+        const eq =
+          MOCK_EQUIPMENT[this.state.currentIndex];
 
-    const colors = this.state.userColors || defaultColors;
 
-    const customOrder = [
-        "Refrigeration System",
-        "Clean Steam Generator",
-        "Bulk Chemical System",
-        "Condensate Return System",
-        "RVAC",
-        "BOILER",
-        "Compressed Dry Air (CDA)",
-        "Waste Water Treatment Plant (WWTP)",
-        "Water Treatment Plant (WTP)",
-        "Combined Water Storage (CWS)",
-        "Sump Pit Pump 1",
-        "Freezer & Cold Storage",
-        "CIP Line (E7)",
-        "Bottle Washer (E8)",
-        "Modular Labeller (E9)",
-        "Container Conveyor (E10)",
-        "Conveyor Lubrication (E11)",
-        "Alwin Soy",
-        "Process MCC",
-        "Homogenizer",
-        "Soya Bean Pre-treatment & Handling",
-        "Sugar Dissolving",
-        "Container Dryer (E1)",
-        "Packer (E2)",
-        "Unpacker (E3)",
-        "Container Depalettiser (E4)",
-        "Pack Washing (E5)",
-        "Inspector (E6)",
-        "Pack Conveyor (E12)",
-        "Ups",
-        "Wrap Round",
-        "Hydro Sterilizer",
-        "Filler",
-        "DPP",
-        "DLP",
-        "Warehouse",
-        "RVAC (220V)",
-        "WWTP (220V)",
-        "DP-WM",
-        "Sumppit Pump2",
-        "Accumulation Table"
-    ];
+        const record =
+          this.state.cloudReadings[eq.id];
 
-    return `
-    <div class="p-3 sm:p-4 max-w-xl mx-auto min-h-screen pb-40">
 
-        <!-- =================================================
-             HEADER
-             ================================================= -->
-        <div class="flex justify-between items-center mb-5 pt-3">
+        if (!record) {
 
-            <button
-                onclick="app.state.view='home';app.render()"
-                class="font-black text-[10px] tracking-widest
-                       px-4 py-2.5 bg-white/10 rounded-xl
-                       border border-white/20
-                       active:scale-95 transition-all"
-            >
-                ← BACK
-            </button>
+          alert(
+            "⚠️ No existing log found for this equipment."
+          );
 
-            <input
-                type="date"
-                value="${this.state.filterDate}"
-                onchange="app.state.filterDate=this.value; app.syncWithCloud(this.value)"
-                class="bg-white/10 px-3 sm:px-4 py-2.5 rounded-xl
-                       font-bold text-xs border border-white/20
-                       text-emerald-500 outline-none"
-            >
+          return;
 
-        </div>
+        }
 
-        <!-- =================================================
-             DAILY SUMMARY
-             ================================================= -->
+
+        if (
+          field !== 'previous' &&
+          field !== 'current'
+        ) {
+          return;
+        }
+
+
+        this.state.editField = field;
+
+
+        /*
+         * IMPORTANT:
+         *
+         * When switching between Previous and Current,
+         * load that existing value into keypad.
+         */
+
+        this.render();
+
+
+        setTimeout(() => {
+
+          const input =
+            document.getElementById('c');
+
+          if (!input) return;
+
+
+          input.focus();
+
+
+          if (navigator.vibrate) {
+            navigator.vibrate(15);
+          }
+
+        }, 50);
+
+      }
+
+
+      /* =======================================================
+         RECORDS
+         ======================================================= */
+
+      recordsHTML() {
+
+        let grandTotal = 0;
+
+
+        MOCK_EQUIPMENT.forEach(eq => {
+
+          const r =
+            this.state.cloudReadings[eq.id];
+
+          if (r && r.usage) {
+
+            grandTotal +=
+              parseFloat(r.usage) || 0;
+
+          }
+
+        });
+
+
+        const meta =
+          this.state.cloudReadings['metadata'] || {};
+
+
+        const defaultColors = {
+
+          "UTILITIES": "#ef4444",
+          "PROCESS": "#3b82f6",
+          "BOTTLING": "#f59e0b",
+          "LVSG 5 LOADS": "#10b981"
+
+        };
+
+
+        const colors =
+          this.state.userColors ||
+          defaultColors;
+
+
+        const customOrder = [
+
+          "Refrigeration System",
+          "Clean Steam Generator",
+          "Bulk Chemical System",
+          "Condensate Return System",
+          "RVAC",
+          "BOILER",
+          "Compressed Dry Air (CDA)",
+          "Waste Water Treatment Plant (WWTP)",
+          "Water Treatment Plant (WTP)",
+          "Combined Water Storage (CWS)",
+          "Sump Pit Pump 1",
+          "Freezer & Cold Storage",
+          "CIP Line (E7)",
+          "Bottle Washer (E8)",
+          "Modular Labeller (E9)",
+          "Container Conveyor (E10)",
+          "Conveyor Lubrication (E11)",
+          "Alwin Soy",
+          "Process MCC",
+          "Homogenizer",
+          "Soya Bean Pre-treatment & Handling",
+          "Sugar Dissolving",
+          "Container Dryer (E1)",
+          "Packer (E2)",
+          "Unpacker (E3)",
+          "Container Depalettiser (E4)",
+          "Pack Washing (E5)",
+          "Inspector (E6)",
+          "Pack Conveyor (E12)",
+          "Ups",
+          "Wrap Round",
+          "Hydro Sterilizer",
+          "Filler",
+          "DPP",
+          "DLP",
+          "Warehouse",
+          "RVAC (220V)",
+          "WWTP (220V)",
+          "DP-WM",
+          "Sumppit Pump2",
+          "Accumulation Table"
+
+        ];
+
+
+        return `
+
         <div
-            class="glass-card p-6 sm:p-8 rounded-[2rem]
-                   shadow-2xl mb-6 border-b-8 border-emerald-500
-                   text-center"
+          class="p-3 sm:p-4
+                 max-w-xl mx-auto
+                 min-h-screen pb-40"
         >
 
-            <h3 class="text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">
-                Daily Consumption
+
+          <!-- HEADER -->
+
+          <div
+            class="flex justify-between
+                   items-center mb-5 pt-3"
+          >
+
+            <button
+              onclick="
+                app.state.view='home';
+                app.render()
+              "
+              class="
+                font-black
+                text-[10px]
+                tracking-widest
+                px-4 py-2.5
+                bg-white/10
+                rounded-xl
+                border
+                border-white/20
+                active:scale-95
+                transition-all
+              "
+            >
+              ← BACK
+            </button>
+
+
+            <input
+              type="date"
+              value="${this.state.filterDate}"
+              onchange="
+                app.state.filterDate=this.value;
+                app.syncWithCloud(this.value)
+              "
+              class="
+                bg-white/10
+                px-3 sm:px-4
+                py-2.5
+                rounded-xl
+                font-bold
+                text-xs
+                border
+                border-white/20
+                text-emerald-500
+                outline-none
+              "
+            >
+
+          </div>
+
+
+          <!-- DAILY SUMMARY -->
+
+          <div
+            class="
+              glass-card
+              p-6 sm:p-8
+              rounded-[2rem]
+              shadow-2xl
+              mb-6
+              border-b-8
+              border-emerald-500
+              text-center
+            "
+          >
+
+            <h3
+              class="
+                text-[9px]
+                font-black
+                uppercase
+                tracking-widest
+                mb-2
+                opacity-60
+              "
+            >
+              Daily Consumption
             </h3>
 
-            <div class="text-3xl sm:text-4xl font-black font-mono-numbers mb-2">
-                ${grandTotal.toFixed(3)}
-                <span class="text-[10px] font-sans">kWh</span>
+
+            <div
+              class="
+                text-3xl sm:text-4xl
+                font-black
+                font-mono-numbers
+                mb-2
+              "
+            >
+
+              ${grandTotal.toFixed(3)}
+
+              <span
+                class="text-[10px] font-sans"
+              >
+                kWh
+              </span>
+
             </div>
 
-            <p class="text-[9px] font-black uppercase text-emerald-500">
-                OPERATOR: ${meta.operator || 'UNSPECIFIED'}
+
+            <p
+              class="
+                text-[9px]
+                font-black
+                uppercase
+                text-emerald-500
+              "
+            >
+              OPERATOR:
+              ${meta.operator || 'UNSPECIFIED'}
             </p>
 
-        </div>
+          </div>
 
-        <!-- =================================================
-             EQUIPMENT RECORDS
-             ================================================= -->
-        <div class="space-y-3 sm:space-y-4">
 
-            ${customOrder.map(name => {
+          <!-- EQUIPMENT RECORDS -->
 
-                const e = MOCK_EQUIPMENT.find(
-                    eq => eq.name.toLowerCase() === name.toLowerCase()
-                );
+          <div class="space-y-3 sm:space-y-4">
+
+            ${
+              customOrder.map(name => {
+
+                const e =
+                  MOCK_EQUIPMENT.find(
+                    eq =>
+                      eq.name.toLowerCase() ===
+                      name.toLowerCase()
+                  );
+
 
                 if (!e) return '';
 
-                /*
-                 * =================================================
-                 * IMPORTANT DISPLAY LOGIC
-                 *
-                 * If current date has NO reading yet:
-                 *
-                 * Previous = yesterday's CURRENT
-                 * Current  = 0
-                 * Total    = 0
-                 *
-                 * Once current reading exists:
-                 *
-                 * Previous = saved previous
-                 * Current  = saved current
-                 * Total    = saved usage
-                 *
-                 * THIS DOES NOT CHANGE SAVE/READING LOGIC.
-                 * DISPLAY ONLY.
-                 * =================================================
-                 */
 
-                const r = this.state.cloudReadings[e.id];
+                const r =
+                  this.state.cloudReadings[e.id];
+
 
                 const yesterday =
-                    this.state.yesterdayReadings &&
-                    this.state.yesterdayReadings[e.id];
+                  this.state.yesterdayReadings &&
+                  this.state.yesterdayReadings[e.id];
 
-                const previousDisplay = r
+
+                const previousDisplay =
+                  r
                     ? (r.prev ?? '0')
                     : (yesterday?.curr ?? '0');
 
-                const currentDisplay = r
+
+                const currentDisplay =
+                  r
                     ? (r.curr ?? '0')
                     : '0';
 
-                const totalDisplay = r
+
+                const totalDisplay =
+                  r
                     ? formatUsageDisplay(r.usage)
                     : '0';
 
+
                 const catColor =
-                    colors[e.loc] ||
-                    defaultColors[e.loc] ||
-                    "#3b82f6";
+                  colors[e.loc] ||
+                  defaultColors[e.loc] ||
+                  "#3b82f6";
+
 
                 return `
+
                 <div
-    id="record-card-${e.id}"
-    class="glass-card powercon-record-card
-           p-3 sm:p-4 rounded-2xl"
-    onclick="app.handleRecordCardClick('${e.id}')"
->
-                    <!-- EQUIPMENT -->
-                    <div class="text-center mb-3 px-2">
+                  id="record-card-${e.id}"
+                  class="
+                    glass-card
+                    powercon-record-card
+                    p-3 sm:p-4
+                    rounded-2xl
+                  "
+                  onclick="
+                    app.handleRecordCardClick('${e.id}')
+                  "
+                >
 
-                        <p class="powercon-record-equipment">
-                            ${e.name}
-                        </p>
+                  <!-- EQUIPMENT -->
 
-                        <span
-                            class="inline-block mt-1
-                                   text-[7px] sm:text-[8px]
-                                   font-black uppercase
-                                   tracking-widest opacity-40"
-                        >
-                            ${e.loc}
-                        </span>
+                  <div
+                    class="
+                      text-center
+                      mb-3
+                      px-2
+                    "
+                  >
 
-                    </div>
+                    <p class="powercon-record-equipment">
+                      ${e.name}
+                    </p>
 
-                    <!-- THREE READINGS -->
-                    <div class="powercon-record-grid">
 
-                        <!-- PREVIOUS -->
-                        <div
-                            class="powercon-record-cell
-                                   bg-black/5 dark:bg-white/5"
-                        >
-
-                            <div class="powercon-record-label opacity-50">
-                                Previous
-                            </div>
-
-                            <div class="powercon-record-value">
-                                ${previousDisplay}
-                            </div>
-
-                        </div>
-
-                        <!-- CURRENT — HIGHLIGHTED -->
-                        <div
-                            class="powercon-record-cell
-                                   bg-emerald-500/10
-                                   border border-emerald-500/20"
-                        >
-
-                            <div
-                                class="powercon-record-label"
-                                style="color:${catColor}"
-                            >
-                                Current
-                            </div>
-
-                            <div
-                                class="powercon-record-value
-                                       text-emerald-500"
-                            >
-                                ${currentDisplay}
-                            </div>
-
-                        </div>
-
-                        <!-- TOTAL -->
-                        <div
-                            class="powercon-record-cell
-                                   bg-emerald-500/10"
-                        >
-
-                            <div class="powercon-record-label text-emerald-500">
-                                Total
-                            </div>
-
-                            <div
-                                class="powercon-record-value
-                                       text-emerald-600"
-                            >
-                                ${totalDisplay}
-                            </div>
-
-                        </div>
-
-                    </div>
-                    <!-- FOCUS INDICATOR -->
-                    <span class="powercon-focus-indicator">
-                        ✓
+                    <span
+                      class="
+                        inline-block
+                        mt-1
+                        text-[7px] sm:text-[8px]
+                        font-black
+                        uppercase
+                        tracking-widest
+                        opacity-40
+                      "
+                    >
+                      ${e.loc}
                     </span>
 
+                  </div>
+
+
+                  <!-- THREE READINGS -->
+
+                  <div
+                    class="powercon-record-grid"
+                  >
+
+
+                    <!-- PREVIOUS -->
+
+                    <div
+                      class="
+                        powercon-record-cell
+                        bg-black/5
+                        dark:bg-white/5
+                      "
+                    >
+
+                      <div
+                        class="
+                          powercon-record-label
+                          opacity-50
+                        "
+                      >
+                        Previous
+                      </div>
+
+
+                      <div
+                        class="
+                          powercon-record-value
+                        "
+                      >
+                        ${previousDisplay}
+                      </div>
+
+                    </div>
+
+
+                    <!-- CURRENT -->
+
+                    <div
+                      class="
+                        powercon-record-cell
+                        bg-emerald-500/10
+                        border
+                        border-emerald-500/20
+                      "
+                    >
+
+                      <div
+                        class="
+                          powercon-record-label
+                        "
+                        style="color:${catColor}"
+                      >
+                        Current
+                      </div>
+
+
+                      <div
+                        class="
+                          powercon-record-value
+                          text-emerald-500
+                        "
+                      >
+                        ${currentDisplay}
+                      </div>
+
+                    </div>
+
+
+                    <!-- TOTAL -->
+
+                    <div
+                      class="
+                        powercon-record-cell
+                        bg-emerald-500/10
+                      "
+                    >
+
+                      <div
+                        class="
+                          powercon-record-label
+                          text-emerald-500
+                        "
+                      >
+                        Total
+                      </div>
+
+
+                      <div
+                        class="
+                          powercon-record-value
+                          text-emerald-600
+                        "
+                      >
+                        ${totalDisplay}
+                      </div>
+
+                    </div>
+
+
+                  </div>
+
+
+                  <!-- FOCUS -->
+
+                  <span
+                    class="powercon-focus-indicator"
+                  >
+                    ✓
+                  </span>
+
                 </div>
+
                 `;
 
-            }).join('')}
+              }).join('')
+            }
+
+          </div>
+
+
+          <!-- BOTTOM ACTIONS -->
+
+          <div
+            class="
+              fixed
+              bottom-0
+              left-0
+              w-full
+              p-3 sm:p-4
+              bg-transparent
+              backdrop-blur-md
+              flex gap-2 sm:gap-3
+              z-20
+            "
+          >
+
+            <button
+              onclick="app.exportToExcel()"
+              class="
+                powercon-action-btn
+                powercon-download-btn
+                flex-1
+                rounded-xl
+                uppercase
+                active:scale-95
+                transition-all
+              "
+            >
+              Download CSV
+            </button>
+
+
+            <button
+              onclick="
+                window.open(
+                  'logsheet.html?date=' +
+                  app.state.filterDate,
+                  '_blank'
+                )
+              "
+              class="
+                powercon-action-btn
+                flex-1
+                bg-emerald-600
+                text-white
+                rounded-xl
+                uppercase
+                active:scale-95
+                transition-all
+              "
+            >
+              Print Log
+            </button>
+
+          </div>
 
         </div>
 
-        <!-- =================================================
-             BOTTOM ACTIONS
-             ================================================= -->
+        `;
+
+      }
+
+
+      /* =======================================================
+         SAVE / UPDATE READING
+         ======================================================= */
+
+      async saveReading(currInput, prevInput) {
+
+        const eq =
+          MOCK_EQUIPMENT[this.state.currentIndex];
+
+
+        /*
+         * =====================================================
+         * ADMIN SINGLE EDIT
+         * =====================================================
+         */
+
+        if (this.state.isSingleEdit) {
+
+          const existing =
+            this.state.cloudReadings[eq.id];
+
+
+          if (!existing) {
+
+            alert(
+              "❌ Cannot edit.\n\nNo existing Firebase log found."
+            );
+
+            return;
+
+          }
+
+
+          let newPrev =
+            String(existing.prev ?? '0');
+
+
+          let newCurr =
+            String(existing.curr ?? '0');
+
+
+          /*
+           * Previous selected
+           */
+          if (this.state.editField === 'previous') {
+
+            if (
+              currInput === '' ||
+              currInput === null ||
+              currInput === undefined
+            ) {
+
+              alert(
+                "⚠️ Please enter the new Previous Reading."
+              );
+
+              return;
+
+            }
+
+            newPrev = String(currInput);
+
+          }
+
+
+          /*
+           * Current selected
+           */
+          else if (this.state.editField === 'current') {
+
+            if (
+              currInput === '' ||
+              currInput === null ||
+              currInput === undefined
+            ) {
+
+              alert(
+                "⚠️ Please enter the new Current Reading."
+              );
+
+              return;
+
+            }
+
+            newCurr = String(currInput);
+
+          }
+
+
+          else {
+
+            alert(
+              "⚠️ Please select Previous or Current first."
+            );
+
+            return;
+
+          }
+
+
+          const currentNum =
+            parseFloat(newCurr);
+
+
+          const prevNum =
+            parseFloat(newPrev);
+
+
+          if (
+            !Number.isFinite(currentNum) ||
+            !Number.isFinite(prevNum)
+          ) {
+
+            alert(
+              "⚠️ Invalid reading value."
+            );
+
+            return;
+
+          }
+
+
+          const usage =
+            (currentNum - prevNum).toFixed(3);
+
+
+          /*
+           * Prevent accidental negative consumption.
+           */
+
+          if (
+            currentNum < prevNum &&
+            !confirm(
+              "⚠️ Current is lower than Previous.\n\nSave this correction anyway?"
+            )
+          ) {
+
+            return;
+
+          }
+
+
+          /*
+           * =====================================================
+           * NEW CORRECTED FIREBASE RECORD
+           * =====================================================
+           */
+
+          const correctedData = {
+
+            id: eq.id,
+
+            name: eq.name,
+
+            loc: eq.loc,
+
+            curr: newCurr,
+
+            prev: newPrev,
+
+            usage: usage
+
+          };
+
+
+      try {
+
+    /*
+     * =====================================================
+     * SAVE CORRECTED CURRENT DATE RECORD
+     * =====================================================
+     */
+
+    const recordRef =
+      db.ref(
+        `readings/${this.state.filterDate}/${eq.id}`
+      );
+
+
+    /*
+     * Delete old wrong log first.
+     */
+
+    await recordRef.remove();
+
+
+    /*
+     * Write corrected log.
+     */
+
+    await recordRef.set(
+      correctedData
+    );
+
+
+    /*
+ * =====================================================
+ * REVERSE SYNC
+ *
+ * TWO-WAY SYNC
+ *
+ * 1. EDIT PREVIOUS
+ *    Aug 25 Previous
+ *    ↓
+ *    Aug 24 Current
+ *
+ * 2. EDIT CURRENT
+ *    Aug 24 Current
+ *    ↓
+ *    Aug 25 Previous
+ *
+ * Both sides recalculate Usage.
+ * =====================================================
+ */
+
+
+/*
+ * =====================================================
+ * CASE 1:
+ * ADMIN EDITED PREVIOUS
+ *
+ * Example:
+ *
+ * Aug 25 Previous = 160
+ *
+ * Then:
+ *
+ * Aug 24 Current = 160
+ *
+ * and Aug 24 Usage is recalculated.
+ * =====================================================
+ */
+
+if (this.state.editField === 'previous') {
+
+  /*
+   * Get previous calendar date.
+   */
+
+  const previousDateObj =
+    new Date(
+      this.state.filterDate + 'T00:00:00'
+    );
+
+  previousDateObj.setDate(
+    previousDateObj.getDate() - 1
+  );
+
+  const previousDate =
+    getLocalDate(previousDateObj);
+
+
+  /*
+   * Get previous date's equipment record.
+   */
+
+  const previousRecordRef =
+    db.ref(
+      `readings/${previousDate}/${eq.id}`
+    );
+
+
+  const previousSnapshot =
+    await previousRecordRef.once('value');
+
+
+  const previousRecord =
+    previousSnapshot.val();
+
+
+  /*
+   * Only reverse-sync if the previous date
+   * actually has an existing log.
+   */
+
+  if (previousRecord) {
+
+    /*
+     * Previous date's CURRENT becomes
+     * the edited PREVIOUS value.
+     */
+
+    const correctedPreviousCurrent =
+      newPrev;
+
+
+    const previousPrevNum =
+      parseFloat(
+        previousRecord.prev ?? '0'
+      );
+
+
+    const correctedCurrentNum =
+      parseFloat(
+        correctedPreviousCurrent
+      );
+
+
+    /*
+     * Recalculate previous date usage.
+     */
+
+    const correctedPreviousUsage =
+      (
+        correctedCurrentNum -
+        previousPrevNum
+      ).toFixed(3);
+
+
+    /*
+     * Keep existing previous-date data.
+     * Only update Current + Usage.
+     */
+
+    const reverseSyncedData = {
+
+      ...previousRecord,
+
+      curr:
+        correctedPreviousCurrent,
+
+      usage:
+        correctedPreviousUsage
+
+    };
+
+
+    /*
+     * Save corrected previous-date record.
+     */
+
+    await previousRecordRef.update({
+
+      curr:
+        correctedPreviousCurrent,
+
+      usage:
+        correctedPreviousUsage
+
+    });
+
+
+    console.log(
+      "✅ REVERSE SYNC PREVIOUS → CURRENT",
+      {
+        equipment: eq.name,
+        editedDate: this.state.filterDate,
+        previousDate: previousDate,
+        newPreviousDateCurrent:
+          correctedPreviousCurrent,
+        newPreviousDateUsage:
+          correctedPreviousUsage
+      }
+    );
+
+  } else {
+
+    console.warn(
+      "⚠️ Reverse sync skipped:",
+      `No record found for ${previousDate}/${eq.id}`
+    );
+
+  }
+
+}
+
+
+/*
+ * =====================================================
+ * CASE 2:
+ * ADMIN EDITED CURRENT
+ *
+ * Example:
+ *
+ * Aug 24 Current = 170
+ *
+ * Then:
+ *
+ * Aug 25 Previous = 170
+ *
+ * and Aug 25 Usage is recalculated.
+ * =====================================================
+ */
+
+else if (this.state.editField === 'current') {
+
+  /*
+   * Get next calendar date.
+   */
+
+  const nextDateObj =
+    new Date(
+      this.state.filterDate + 'T00:00:00'
+    );
+
+  nextDateObj.setDate(
+    nextDateObj.getDate() + 1
+  );
+
+  const nextDate =
+    getLocalDate(nextDateObj);
+
+
+  /*
+   * Get next date's equipment record.
+   */
+
+  const nextRecordRef =
+    db.ref(
+      `readings/${nextDate}/${eq.id}`
+    );
+
+
+  const nextSnapshot =
+    await nextRecordRef.once('value');
+
+
+  const nextRecord =
+    nextSnapshot.val();
+
+
+  /*
+   * Only reverse-sync if the next date
+   * actually has an existing log.
+   */
+
+  if (nextRecord) {
+
+    /*
+     * Next date's PREVIOUS becomes
+     * the edited CURRENT value.
+     */
+
+    const correctedNextPrevious =
+      newCurr;
+
+
+    const nextCurrentNum =
+      parseFloat(
+        nextRecord.curr ?? '0'
+      );
+
+
+    const correctedNextPreviousNum =
+      parseFloat(
+        correctedNextPrevious
+      );
+
+
+    /*
+     * Recalculate next date usage.
+     */
+
+    const correctedNextUsage =
+      (
+        nextCurrentNum -
+        correctedNextPreviousNum
+      ).toFixed(3);
+
+
+    /*
+     * Keep existing next-date data.
+     * Only update Previous + Usage.
+     */
+
+    await nextRecordRef.update({
+
+      prev:
+        correctedNextPrevious,
+
+      usage:
+        correctedNextUsage
+
+    });
+
+
+    console.log(
+      "✅ REVERSE SYNC CURRENT → PREVIOUS",
+      {
+        equipment: eq.name,
+        editedDate: this.state.filterDate,
+        nextDate: nextDate,
+        newNextDatePrevious:
+          correctedNextPrevious,
+        newNextDateUsage:
+          correctedNextUsage
+      }
+    );
+
+  } else {
+
+    console.warn(
+      "⚠️ Forward sync skipped:",
+      `No record found for ${nextDate}/${eq.id}`
+    );
+
+  }
+
+}
+
+    /*
+     * =====================================================
+     * UPDATE LOCAL STATE
+     * =====================================================
+     */
+
+    this.state.cloudReadings[eq.id] =
+      correctedData;
+
+
+    this.state.sessionReadings[
+      this.state.currentIndex
+    ] = correctedData;
+
+
+    /*
+     * =====================================================
+     * RESET EDIT MODE
+     * =====================================================
+     */
+
+    this.state.isSingleEdit = false;
+
+    this.state.editField = null;
+
+    this.state.view = 'records';
+
+
+    /*
+     * =====================================================
+     * RELOAD FIREBASE
+     *
+     * This refreshes the UI with the corrected values.
+     * =====================================================
+     */
+
+    await this.syncWithCloud(
+      this.state.filterDate
+    );
+
+
+    alert(
+      `✅ ${eq.name}\n\n` +
+      `READING UPDATED SUCCESSFULLY!\n\n` +
+      `Previous: ${newPrev}\n` +
+      `Current: ${newCurr}\n` +
+      `Usage: ${usage}`
+
+    );
+
+}
+
+catch (e) {
+
+    console.error(
+      "EDIT SAVE ERROR:",
+      e
+    );
+
+
+    alert(
+      "❌ UPDATE FAILED!\n\n" +
+      "The old record may not have been replaced.\n\n" +
+      e.message
+    );
+
+}
+
+
+          return;
+
+        }
+
+
+        /*
+         * =====================================================
+         * NORMAL READING MODE
+         * =====================================================
+         */
+
+        const currentStr =
+          currInput || "0";
+
+
+        const prevStr =
+          prevInput || "0";
+
+
+        const currentNum =
+          parseFloat(currentStr);
+
+
+        const prevNum =
+          parseFloat(prevStr);
+
+
+        const usage =
+          (currentNum - prevNum).toFixed(3);
+
+
+        if (
+          currentNum < prevNum &&
+          !confirm(
+            "⚠️ Current lower than previous. Save anyway?"
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const data = {
+
+          id: eq.id,
+
+          name: eq.name,
+
+          loc: eq.loc,
+
+          curr: currentStr,
+
+          prev: prevStr,
+
+          usage: usage
+
+        };
+
+
+        this.state.sessionReadings[
+          this.state.currentIndex
+        ] = data;
+
+
+        localStorage.setItem(
+          'p_last_index',
+          this.state.currentIndex + 1
+        );
+
+
+        if (this.state.isEditingFromReview) {
+
+          this.state.isEditingFromReview = false;
+
+          this.state.view = 'review';
+
+          this.render();
+
+        }
+
+        else {
+
+          if (
+            this.state.currentIndex <
+            MOCK_EQUIPMENT.length - 1
+          ) {
+
+            this.state.currentIndex++;
+
+            this.render();
+
+          }
+
+          else {
+
+            this.state.view = 'review';
+
+            this.render();
+
+          }
+
+        }
+
+      }
+
+
+      /* =======================================================
+         REVIEW
+         ======================================================= */
+
+      reviewHTML() {
+
+        return `
+
         <div
-            class="fixed bottom-0 left-0 w-full
-                   p-3 sm:p-4
-                   bg-transparent backdrop-blur-md
-                   flex gap-2 sm:gap-3
-                   z-20"
+          class="
+            p-6
+            max-w-xl
+            mx-auto
+            flex flex-col
+            min-h-screen
+          "
         >
 
-            <button
-    onclick="app.exportToExcel()"
-    class="powercon-action-btn powercon-download-btn flex-1
-           rounded-xl
-           uppercase
-           active:scale-95 transition-all"
->
-    Download CSV
-</button>
+          <h2
+            class="
+              text-3xl
+              font-black
+              mb-6
+              italic
+              pt-10
+            "
+          >
+            Review Log
+          </h2>
 
-            <button
-    onclick="window.open('logsheet.html?date=' + app.state.filterDate, '_blank')"
-    class="powercon-action-btn flex-1
-           bg-emerald-600 text-white
-           rounded-xl
-           uppercase
-           active:scale-95 transition-all"
->
-    Print Log
-</button>
+
+          <div
+            class="
+              glass-card
+              rounded-[2rem]
+              flex-1
+              mb-8
+              overflow-y-auto
+            "
+          >
+
+            <table class="w-full">
+
+              ${
+                this.state.sessionReadings
+                  .map((r, i) => r ?
+
+                    `
+                    <tr
+                      onclick="app.editFromReview(${i})"
+                      class="
+                        border-b
+                        border-white/5
+                        cursor-pointer
+                        hover:bg-white/5
+                      "
+                    >
+
+                      <td
+                        class="
+                          p-4
+                          font-black
+                          uppercase
+                          text-[9px]
+                          opacity-70
+                        "
+                      >
+                        ${r.name}
+                      </td>
+
+
+                      <td
+                        class="
+                          p-4
+                          text-right
+                          font-mono-numbers
+                          font-black
+                          text-emerald-500
+                        "
+                      >
+                        ${r.curr}
+                      </td>
+
+                    </tr>
+                    `
+
+                    : ''
+                  )
+                  .join('')
+              }
+
+            </table>
+
+          </div>
+
+
+          <button
+            onclick="app.openNameModal()"
+            class="
+              w-full
+              bg-emerald-600
+              text-white
+              font-black
+              py-6
+              rounded-3xl
+              shadow-xl
+              text-lg
+              uppercase
+              italic
+              mb-8
+            "
+          >
+            Finalize Submission ✓
+          </button>
+
+
+          <div
+            id="nameModal"
+            class="modal hidden"
+          >
+
+            <div
+              class="
+                modal-content
+                rounded-[2.5rem]
+                p-8
+                max-w-xs
+                mx-auto
+                text-center
+              "
+            >
+
+              <h3
+                class="
+                  text-lg
+                  font-black
+                  mb-4
+                "
+              >
+                Enter Operator Name
+              </h3>
+
+
+              <input
+                type="text"
+                id="opNameInput"
+                placeholder="Operator Name"
+                class="
+                  w-full
+                  p-3
+                  rounded-xl
+                  border
+                  border-gray-300
+                  mb-4
+                  text-center
+                "
+              >
+
+
+              <p
+                id="signalStatus"
+                class="
+                  text-[8px]
+                  font-bold
+                  uppercase
+                  mb-4
+                  opacity-50
+                  italic
+                  transition-all
+                  duration-300
+                "
+              >
+                Checking signal...
+              </p>
+
+
+              <div
+                id="recentNamesList"
+                class="
+                  flex
+                  flex-wrap
+                  justify-center
+                  gap-2
+                  mb-4
+                "
+              ></div>
+
+
+              <button
+                onclick="app.confirmFinalSave()"
+                class="
+                  w-full
+                  py-4
+                  bg-emerald-600
+                  text-white
+                  font-black
+                  rounded-2xl
+                  mb-2
+                "
+              >
+                Submit
+              </button>
+
+
+              <button
+                onclick="
+                  document
+                    .getElementById('nameModal')
+                    .classList.add('hidden')
+                "
+                class="
+                  w-full
+                  py-4
+                  bg-gray-400
+                  text-white
+                  font-black
+                  rounded-2xl
+                "
+              >
+                Cancel
+              </button>
+
+            </div>
+
+          </div>
 
         </div>
 
-    </div>
-    `;
-}
+        `;
 
-  async saveReading(currInput, prevInput) {
-    const eq = MOCK_EQUIPMENT[this.state.currentIndex];
-    
-    // Panatilihin bilang string para hindi mawala ang decimal places
-    const currentStr = currInput || "0";
-    const prevStr = prevInput || "0";
-    
-    const currentNum = parseFloat(currentStr);
-    const prevNum = parseFloat(prevStr);
-    const usage = (currentNum - prevNum).toFixed(3);
-    
-    if (currentNum < prevNum && !confirm("⚠️ Current lower than previous. Save anyway?")) return;
-    
-    const data = { id: eq.id, name: eq.name, loc: eq.loc, curr: currentStr, prev: prevStr, usage: usage };
-    this.state.sessionReadings[this.state.currentIndex] = data;
-    localStorage.setItem('p_last_index', this.state.currentIndex + 1);
-    if (this.state.isSingleEdit) {
-        await db.ref(`readings/${this.state.filterDate}/${eq.id}`).set(data);
-        this.state.isSingleEdit = false; this.state.view = 'records'; 
-        await this.syncWithCloud(this.state.filterDate);
-    } else if (this.state.isEditingFromReview) {
-        this.state.isEditingFromReview = false; this.state.view = 'review'; this.render();
-    } else {
-        if (this.state.currentIndex < MOCK_EQUIPMENT.length - 1) { 
-            this.state.currentIndex++; this.render(); 
-        } else { 
-            this.state.view = 'review'; this.render(); 
+      }
+
+
+      /* =======================================================
+         FINAL SAVE
+         ======================================================= */
+
+      async confirmFinalSave() {
+
+        if (!navigator.onLine) {
+
+          alert(
+            "⚠️ WALANG INTERNET!\n\n" +
+            "Hindi mai-save ang data sa database."
+          );
+
+          return;
+
         }
-    }
-  }
 
-  reviewHTML() {
-  return `
-  <div class="p-6 max-w-xl mx-auto flex flex-col min-h-screen">
-    <h2 class="text-3xl font-black mb-6 italic pt-10">Review Log</h2>
 
-    <!-- Review Table -->
-    <div class="glass-card rounded-[2rem] flex-1 mb-8 overflow-y-auto">
-      <table class="w-full">
-        ${this.state.sessionReadings.map((r, i) => r ? 
-          `<tr onclick="app.editFromReview(${i})" class="border-b border-white/5 cursor-pointer hover:bg-white/5">
-            <td class="p-4 font-black uppercase text-[9px] opacity-70">${r.name}</td>
-            <td class="p-4 text-right font-mono-numbers font-black text-emerald-500">${r.curr}</td>
-          </tr>` : '').join('')}
-      </table>
-    </div>
+        const input =
+          document.getElementById(
+            'opNameInput'
+          );
 
-    <!-- Finalize Submission Button -->
-    <button onclick="app.openNameModal()" class="w-full bg-emerald-600 text-white font-black py-6 rounded-3xl shadow-xl text-lg uppercase italic mb-8">
-      Finalize Submission ✓
-    </button>
 
-    <!-- Operator Name Modal -->
-    <div id="nameModal" class="modal hidden">
-      <div class="modal-content rounded-[2.5rem] p-8 max-w-xs mx-auto text-center">
-        <h3 class="text-lg font-black mb-4">Enter Operator Name</h3>
-        <input type="text" id="opNameInput" placeholder="Operator Name" class="w-full p-3 rounded-xl border border-gray-300 mb-4 text-center">
-        <p id="signalStatus" class="text-[8px] font-bold uppercase mb-4 opacity-50 italic transition-all duration-300">Checking signal...</p>
-        <div id="recentNamesList" class="flex flex-wrap justify-center gap-2 mb-4"></div>
-        
-        <button onclick="app.confirmFinalSave()" class="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl mb-2">
-          Submit
-        </button>
-        <button onclick="document.getElementById('nameModal').classList.add('hidden')" class="w-full py-4 bg-gray-400 text-white font-black rounded-2xl">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-  `;
-}
+        const opName =
+          input.value.trim().toUpperCase();
 
-  // --- REST OF THE METHODS (confirmFinalSave, editFromDashboard, etc.) ---
- async confirmFinalSave() {
-    // --- 1. SIGNAL GUARD ---
-    // Haharangin muna natin dito bago pa man mag-proceed sa opName
-    if (!navigator.onLine) {
-        alert("⚠️ WALANG INTERNET!\n\nHindi mai-save ang data sa database. Maghanap ng signal o kumonekta sa Wi-Fi bago i-click ang Submit.");
-        return; // Stop the process
-    }
 
-    const opName = document.getElementById('opNameInput').value.trim().toUpperCase();
-    if(!opName) return alert("Enter Operator Name!");
+        if (!opName) {
 
-    // --- 2. PREPARE RECENT OPERATORS ---
-    let recent = JSON.parse(localStorage.getItem('recentOperators') || '[]'); 
-    recent = [opName, ...recent.filter(n => n !== opName)].slice(0, 5); 
-    localStorage.setItem('recentOperators', JSON.stringify(recent));
+          return alert(
+            "Enter Operator Name!"
+          );
 
-    // --- 3. PREPARE DATA ---
-    const updates = {}; 
-    this.state.sessionReadings.forEach(r => { if(r) updates[`/readings/${this.state.date}/${r.id}`] = r; });
-    updates[`/readings/${this.state.date}/metadata`] = { operator: opName, timestamp: Date.now() };
+        }
 
-    // --- 4. ACTUAL SAVING WITH ERROR HANDLING ---
-    try {
-        await db.ref().update(updates); 
-        
-        // Success! Dito na natin lilinisin ang modal at progress
-        document.getElementById('nameModal').classList.add('hidden');
-        this.state.view = 'records'; 
-        this.state.filterDate = this.state.date; 
-        
-        await this.syncWithCloud(this.state.date);
-        
-        // Clear progress ONLY if successfully saved to cloud
-        localStorage.removeItem('p_last_index');
-        
-        alert("✅ LOGSHEET SUBMITTED!");
-    } catch (e) {
-        // Kung nag-error (halimbawa biglang naputol ang net habang nag-u-update)
-        alert("❌ PAG-SAVE FAILED: Check your signal and try again.\n" + e.message);
-    }
-}
 
-  openNameModal() {
-    const modal = document.getElementById('nameModal'); modal.classList.remove('hidden');
-    const recent = JSON.parse(localStorage.getItem('recentOperators') || '[]');
-    document.getElementById('recentNamesList').innerHTML = recent.map(name => `<button onclick="document.getElementById('opNameInput').value='${name}'; app.confirmFinalSave()" class="text-[9px] bg-emerald-500/10 text-current px-4 py-2 rounded-xl font-bold uppercase m-1 border border-emerald-500/20">${name}</button>`).join('');
-  }
+        let recent =
+          JSON.parse(
+            localStorage.getItem(
+              'recentOperators'
+            ) || '[]'
+          );
 
- async start() { 
-    await this.syncWithCloud(); 
-    this.state.isSingleEdit = false; 
 
-    // Kunin ang huling index na tinigilan (kung meron)
-    const savedIndex = localStorage.getItem('p_last_index');
-    
-    if (savedIndex && savedIndex < MOCK_EQUIPMENT.length) {
-        const resume = confirm("Resume from where you left off?");
-        if (resume) {
-            this.state.currentIndex = parseInt(savedIndex);
-        } else {
+        recent =
+          [
+            opName,
+            ...recent.filter(
+              n => n !== opName
+            )
+          ].slice(0, 5);
+
+
+        localStorage.setItem(
+          'recentOperators',
+          JSON.stringify(recent)
+        );
+
+
+        const updates = {};
+
+
+        this.state.sessionReadings.forEach(r => {
+
+          if (r) {
+
+            updates[
+              `/readings/${this.state.date}/${r.id}`
+            ] = r;
+
+          }
+
+        });
+
+
+        updates[
+          `/readings/${this.state.date}/metadata`
+        ] = {
+
+          operator: opName,
+
+          timestamp: Date.now()
+
+        };
+
+
+        try {
+
+          await db.ref().update(
+            updates
+          );
+
+
+          document
+            .getElementById('nameModal')
+            .classList
+            .add('hidden');
+
+
+          this.state.view =
+            'records';
+
+
+          this.state.filterDate =
+            this.state.date;
+
+
+          await this.syncWithCloud(
+            this.state.date
+          );
+
+
+          localStorage.removeItem(
+            'p_last_index'
+          );
+
+
+          alert(
+            "✅ LOGSHEET SUBMITTED!"
+          );
+
+        }
+
+        catch (e) {
+
+          alert(
+            "❌ PAG-SAVE FAILED:\n\n" +
+            e.message
+          );
+
+        }
+
+      }
+
+
+      /* =======================================================
+         OPERATOR MODAL
+         ======================================================= */
+
+      openNameModal() {
+
+        const modal =
+          document.getElementById(
+            'nameModal'
+          );
+
+
+        modal.classList.remove(
+          'hidden'
+        );
+
+
+        const recent =
+          JSON.parse(
+            localStorage.getItem(
+              'recentOperators'
+            ) || '[]'
+          );
+
+
+        document
+          .getElementById(
+            'recentNamesList'
+          )
+          .innerHTML = recent
+          .map(name => `
+
+            <button
+              onclick="
+                document.getElementById(
+                  'opNameInput'
+                ).value='${name}';
+
+                app.confirmFinalSave()
+              "
+              class="
+                text-[9px]
+                bg-emerald-500/10
+                text-current
+                px-4 py-2
+                rounded-xl
+                font-bold
+                uppercase
+                m-1
+                border
+                border-emerald-500/20
+              "
+            >
+              ${name}
+            </button>
+
+          `)
+          .join('');
+
+      }
+
+
+      /* =======================================================
+         START
+         ======================================================= */
+
+      async start() {
+
+        await this.syncWithCloud();
+
+
+        this.state.isSingleEdit =
+          false;
+
+
+        this.state.isEditingFromReview =
+          false;
+
+
+        this.state.editField =
+          null;
+
+
+        const savedIndex =
+          localStorage.getItem(
+            'p_last_index'
+          );
+
+
+        if (
+          savedIndex &&
+          savedIndex < MOCK_EQUIPMENT.length
+        ) {
+
+          const resume =
+            confirm(
+              "Resume from where you left off?"
+            );
+
+
+          if (resume) {
+
+            this.state.currentIndex =
+              parseInt(savedIndex);
+
+          }
+
+          else {
+
             this.state.currentIndex = 0;
-            localStorage.removeItem('p_last_index'); // Clear kung ayaw mag-resume
+
+            localStorage.removeItem(
+              'p_last_index'
+            );
+
+          }
+
         }
-    } else {
-        // Kung wala pang nasimulan, hanapin ang unang empty
-        let firstEmpty = 0; 
-        for(let i=0; i<MOCK_EQUIPMENT.length; i++) { 
-            if(!this.state.cloudReadings[MOCK_EQUIPMENT[i].id]) { 
-                firstEmpty = i; 
-                break; 
-            } 
-        } 
-        this.state.currentIndex = firstEmpty;
+
+        else {
+
+          let firstEmpty = 0;
+
+
+          for (
+            let i = 0;
+            i < MOCK_EQUIPMENT.length;
+            i++
+          ) {
+
+            if (
+              !this.state.cloudReadings[
+                MOCK_EQUIPMENT[i].id
+              ]
+            ) {
+
+              firstEmpty = i;
+
+              break;
+
+            }
+
+          }
+
+
+          this.state.currentIndex =
+            firstEmpty;
+
+        }
+
+
+        this.state.view =
+          'reading';
+
+
+        this.render();
+
+      }
+
+
+      /* =======================================================
+         EXIT READING
+         ======================================================= */
+
+      exitReading() {
+
+        if (
+          this.state.isEditingFromReview
+        ) {
+
+          this.state.isEditingFromReview =
+            false;
+
+          this.state.view =
+            'review';
+
+        }
+
+        else {
+
+          this.state.view =
+            this.state.isSingleEdit
+              ? 'records'
+              : 'home';
+
+        }
+
+
+        this.state.isSingleEdit =
+          false;
+
+
+        this.state.editField =
+          null;
+
+
+        this.render();
+
+      }
+
+
+      /* =======================================================
+         REVIEW EDIT
+         ======================================================= */
+
+      editFromReview(i) {
+
+        this.state.currentIndex =
+          i;
+
+
+        this.state.isEditingFromReview =
+          true;
+
+
+        this.state.isSingleEdit =
+          false;
+
+
+        this.state.editField =
+          'current';
+
+
+        this.state.view =
+          'reading';
+
+
+        this.render();
+
+      }
+
+
+      /* =======================================================
+         RECORD CARD CLICK
+         ======================================================= */
+
+      handleRecordCardClick(id) {
+
+        const selected =
+          document.getElementById(
+            `record-card-${id}`
+          );
+
+
+        if (!selected) return;
+
+
+        if (
+          !selected.classList.contains(
+            'powercon-focused'
+          )
+        ) {
+
+          this.focusRecordCard(id);
+
+          return;
+
+        }
+
+
+        this.editFromDashboard(id);
+
+      }
+
+
+      /* =======================================================
+         FOCUS RECORD
+         ======================================================= */
+
+      focusRecordCard(id) {
+
+        const cards =
+          document.querySelectorAll(
+            '.powercon-record-card'
+          );
+
+
+        cards.forEach(card => {
+
+          card.classList.remove(
+            'powercon-focused'
+          );
+
+          card.classList.add(
+            'powercon-unfocused'
+          );
+
+        });
+
+
+        const selected =
+          document.getElementById(
+            `record-card-${id}`
+          );
+
+
+        if (!selected) return;
+
+
+        selected.classList.remove(
+          'powercon-unfocused'
+        );
+
+
+        selected.classList.add(
+          'powercon-focused'
+        );
+
+
+        selected.scrollIntoView({
+
+          behavior: 'smooth',
+
+          block: 'center'
+
+        });
+
+
+        if (navigator.vibrate) {
+
+          navigator.vibrate(15);
+
+        }
+
+      }
+
+
+      /* =======================================================
+         ADMIN DASHBOARD EDIT
+         ======================================================= */
+
+      editFromDashboard(id) {
+
+        const pin =
+          prompt(
+            "Admin PIN:"
+          );
+
+
+        if (pin !== "abnpower") {
+
+          if (pin !== null) {
+
+            alert(
+              "❌ INVALID ADMIN PIN"
+            );
+
+          }
+
+          return;
+
+        }
+
+
+        const index =
+          MOCK_EQUIPMENT.findIndex(
+            e => e.id === id
+          );
+
+
+        if (index === -1) return;
+
+
+        const record =
+          this.state.cloudReadings[id];
+
+
+        if (!record) {
+
+          alert(
+            "❌ No existing log found for this equipment."
+          );
+
+          return;
+
+        }
+
+
+        /*
+         * ADMIN EDIT STARTS
+         */
+
+        this.state.isSingleEdit =
+          true;
+
+
+        this.state.isEditingFromReview =
+          false;
+
+
+        this.state.currentIndex =
+          index;
+
+
+        /*
+         * DEFAULT = CURRENT
+         *
+         * So existing current value immediately
+         * appears in the keypad.
+         */
+
+        this.state.editField =
+          'current';
+
+
+        this.state.view =
+          'reading';
+
+
+        this.render();
+
+
+        setTimeout(() => {
+
+          const input =
+            document.getElementById(
+              'c'
+            );
+
+
+          if (input) {
+
+            input.focus();
+
+          }
+
+        }, 50);
+
+      }
+
+
+      /* =======================================================
+         EXPORT CSV
+         ======================================================= */
+
+      exportToExcel() {
+
+        let csv =
+          "ID,Equipment,Location,Previous,Current,Usage\n";
+
+
+        MOCK_EQUIPMENT.forEach(eq => {
+
+          const r =
+            this.state.cloudReadings[eq.id] ||
+            {
+              prev: '0',
+              curr: '0',
+              usage: '0'
+            };
+
+
+          csv +=
+            `${eq.id},"${eq.name}",${eq.loc},` +
+            `${r.prev},${r.curr},${r.usage}\n`;
+
+        });
+
+
+        const blob =
+          new Blob(
+            [csv],
+            {
+              type: 'text/csv'
+            }
+          );
+
+
+        const link =
+          document.createElement(
+            "a"
+          );
+
+
+        link.href =
+          URL.createObjectURL(
+            blob
+          );
+
+
+        link.download =
+          `Log_${this.state.filterDate}.csv`;
+
+
+        link.click();
+
+
+        URL.revokeObjectURL(
+          link.href
+        );
+
+      }
+
     }
 
-    this.state.view = 'reading'; 
-    this.render(); 
-}
-  exitReading() { if (this.state.isEditingFromReview) { this.state.isEditingFromReview = false; this.state.view = 'review'; } else { this.state.view = this.state.isSingleEdit ? 'records' : 'home'; } this.state.isSingleEdit = false; this.render(); }
-  editFromReview(i) { this.state.currentIndex = i; this.state.isEditingFromReview = true; this.state.view = 'reading'; this.render(); }
-    handleRecordCardClick(id) {
 
-    const selected = document.getElementById(
-        `record-card-${id}`
-    );
+    /* =========================================================
+       KEYPAD LOGIC
+       ========================================================= */
 
-    if (!selected) return;
+    window.handleKey = (k) => {
 
-    /*
-     * FIRST TAP
-     * Focus / highlight only
-     */
-    if (!selected.classList.contains('powercon-focused')) {
+      const c =
+        document.getElementById(
+          'c'
+        );
 
-        this.focusRecordCard(id);
+
+      const p =
+        document.getElementById(
+          'p'
+        );
+
+
+      if (!c || !p) return;
+
+
+      /*
+       * BACKSPACE
+       */
+
+      if (k === '⌫') {
+
+        c.value =
+          c.value.slice(
+            0,
+            -1
+          );
+
+      }
+
+
+      /*
+       * DECIMAL
+       */
+
+      else if (k === '.') {
+
+        if (
+          !c.value.includes('.')
+        ) {
+
+          c.value += '.';
+
+        }
+
+      }
+
+
+      /*
+       * NUMBER
+       */
+
+      else {
+
+        /*
+         * Max 4 decimal places.
+         */
+
+        if (
+          c.value.includes('.') &&
+          c.value.split('.')[1].length >= 4
+        ) {
+
+          return;
+
+        }
+
+
+        c.value += k;
+
+      }
+
+
+      /*
+       * =====================================================
+       * COLOR FEEDBACK
+       *
+       * IMPORTANT:
+       *
+       * Normal mode:
+       * compare Current against Previous.
+       *
+       * Admin Previous edit:
+       * compare new Previous against existing Current.
+       *
+       * Admin Current edit:
+       * compare Current against Previous.
+       * =====================================================
+       */
+
+      const currentVal =
+        parseFloat(c.value) || 0;
+
+
+      const prevVal =
+        parseFloat(p.value) || 0;
+
+
+      const editingPrevious =
+        app.state.isSingleEdit &&
+        app.state.editField === 'previous';
+
+
+      if (c.value === '') {
+
+        c.style.color = "";
+
+      }
+
+      else if (editingPrevious) {
+
+        /*
+         * Previous should normally be <= Current.
+         */
+
+        const existingCurrent =
+          parseFloat(
+            app.state.cloudReadings[
+              MOCK_EQUIPMENT[
+                app.state.currentIndex
+              ].id
+            ]?.curr
+          ) || 0;
+
+
+        if (currentVal > existingCurrent) {
+
+          c.style.color =
+            "#ef4444";
+
+        }
+
+        else {
+
+          c.style.color =
+            "#10b981";
+
+        }
+
+      }
+
+      else if (currentVal < prevVal) {
+
+        c.style.color =
+          "#ef4444";
+
+      }
+
+      else if (
+        currentVal >
+        prevVal + 2000000
+      ) {
+
+        c.style.color =
+          "#f59e0b";
+
+      }
+
+      else {
+
+        c.style.color =
+          "#10b981";
+
+      }
+
+    };
+
+
+    /* =========================================================
+       ENTER / SAVE
+       ========================================================= */
+
+    window.enterNext = () => {
+
+      const c =
+        document.getElementById(
+          'c'
+        );
+
+
+      const p =
+        document.getElementById(
+          'p'
+        );
+
+
+      if (!c || !p) return;
+
+
+      /*
+       * Normal reading cannot be blank.
+       *
+       * Admin edit also cannot be blank.
+       */
+
+      if (
+        c.value === ''
+      ) {
+
+        alert(
+          "⚠️ Please enter a reading."
+        );
 
         return;
+
+      }
+
+
+      app.saveReading(
+        c.value,
+        p.value
+      );
+
+    };
+
+
+    /* =========================================================
+       SETTINGS
+       ========================================================= */
+
+    window.toggleSettings = () => {
+
+      document
+        .getElementById(
+          'settingsModal'
+        )
+        .classList
+        .toggle('hidden');
+
+    };
+
+
+    window.updateOpacity = (v) => {
+
+      document.documentElement
+        .style
+        .setProperty(
+          '--glass-opacity',
+          v
+        );
+
+
+      localStorage.setItem(
+        'p_opacity',
+        v
+      );
+
+    };
+
+
+    window.setBg = (val, mode) => {
+
+      const b =
+        document.getElementById(
+          'bodyBg'
+        );
+
+
+      b.style.backgroundImage =
+        'none';
+
+
+      b.style.backgroundColor =
+        'transparent';
+
+
+      if (val.startsWith('#')) {
+
+        b.style.backgroundColor =
+          val;
+
+      }
+
+      else {
+
+        b.style.backgroundImage =
+          `url('${val}')`;
+
+        b.style.backgroundSize =
+          'cover';
+
+        b.style.backgroundPosition =
+          'center';
+
+      }
+
+
+      b.classList.remove(
+        'light-mode',
+        'dark-mode'
+      );
+
+
+      b.classList.add(
+        mode + '-mode'
+      );
+
+
+      localStorage.setItem(
+        'p_theme_val',
+        val
+      );
+
+
+      localStorage.setItem(
+        'p_theme_mode',
+        mode
+      );
+
+    };
+
+
+    window.handleImageUpload = (e) => {
+
+      const r =
+        new FileReader();
+
+
+      r.onload = (ev) => {
+
+        setBg(
+          `url(${ev.target.result})`,
+          'dark'
+        );
+
+      };
+
+
+      r.readAsDataURL(
+        e.target.files[0]
+      );
+
+    };
+
+
+    function loadSavedTheme() {
+
+      const val =
+        localStorage.getItem(
+          'p_theme_val'
+        ) ||
+        'assets/bg.webp';
+
+
+      const mode =
+        localStorage.getItem(
+          'p_theme_mode'
+        ) ||
+        'light';
+
+
+      const op =
+        localStorage.getItem(
+          'p_opacity'
+        ) ||
+        '0.80';
+
+
+      window.setBg(
+        val,
+        mode
+      );
+
+
+      window.updateOpacity(
+        op
+      );
+
     }
 
-    /*
-     * SECOND TAP ON SAME CARD
-     * Open protected editing
-     */
-    this.editFromDashboard(id);
-}
-    focusRecordCard(id) {
 
-    const cards = document.querySelectorAll(
-        '.powercon-record-card'
-    );
+    /* =========================================================
+       ZERO LONG PRESS
+       ========================================================= */
 
-    // Reset all cards
-    cards.forEach(card => {
-        card.classList.remove('powercon-focused');
-        card.classList.add('powercon-unfocused');
-    });
+    window.startPress = () => {
 
-    // Find selected card
-    const selected = document.getElementById(
-        `record-card-${id}`
-    );
+      isLongPress = false;
 
-    if (!selected) return;
 
-    // Highlight selected card
-    selected.classList.remove('powercon-unfocused');
-    selected.classList.add('powercon-focused');
+      pressTimer =
+        setTimeout(() => {
 
-    // Automatically bring it to the center
-    selected.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-    });
+          isLongPress = true;
 
-    // Small haptic feedback
-    if (navigator.vibrate) {
-        navigator.vibrate(15);
-    }
-}
-  editFromDashboard(id) { const pin = prompt("Admin PIN:"); if (pin === "abnpower") { const index = MOCK_EQUIPMENT.findIndex(e => e.id === id); if (index !== -1) { this.state.isSingleEdit = true; this.state.currentIndex = index; this.state.view = 'reading'; this.render(); } } }
-  exportToExcel() {
-    let csv = "ID,Equipment,Location,Previous,Current,Usage\n";
-    MOCK_EQUIPMENT.forEach(eq => { const r = this.state.cloudReadings[eq.id] || { prev: '0', curr: '0', usage: '0' }; csv += `${eq.id},"${eq.name}",${eq.loc},${r.prev},${r.curr},${r.usage}\n`; });
-    const blob = new Blob([csv], { type: 'text/csv' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Log_${this.state.filterDate}.csv`; link.click();
-  }
-}
 
-// UTILS & WINDOW FUNCTIONS
-window.handleKey = (k) => { 
-    const c = document.getElementById('c'); 
-    const p = document.getElementById('p'); 
-    if(!c || !p) return;
+          const display =
+            document.getElementById(
+              'c'
+            );
 
-    // 1. KEYPAD LOGIC (PAG-TYPE)
-    if (k === '⌫') {
-        c.value = c.value.slice(0, -1);
-    } else if (k === '.') {
-        if (!c.value.includes('.')) c.value += '.';
-    } else { 
-        // Limit to 4 decimal places para hindi mag-overflow sa screen
-        if (c.value.includes('.') && c.value.split('.')[1].length >= 4) return; 
-        c.value += k; 
-    }
 
-    // 2. ERROR DETECTION LOGIC
-    const currentVal = parseFloat(c.value) || 0;
-    const prevVal = parseFloat(p.value) || 0;
+          if (display) {
 
-    // 3. DIRECT COLOR FEEDBACK (Mismong Numero)
-    if (c.value === "") {
-        c.style.color = ""; // Neutral kapag walang tinatype
-    } else if (currentVal < prevVal) {
-        // ERROR: Mas mababa sa previous reading (RED)
-        c.style.color = "#ef4444"; 
-    } else if (currentVal > prevVal + 2000000) { 
-        // TYPO: Sobrang laki ng jump (ORANGE) 
-        // Pwede mong i-adjust ang 2M base sa max consumption niyo
-        c.style.color = "#f59e0b";
-    } else {
-        // CORRECT: Normal increase (GREEN)
-        c.style.color = "#10b981"; 
-    }
-};
-window.enterNext = () => { 
-    const c = document.getElementById('c'); 
-    const p = document.getElementById('p'); 
-    if(!c || (c.value === "" && !app.state.isSingleEdit)) return; 
-    app.saveReading(c.value, p.value); 
-};
+            display.value =
+              "";
 
-window.toggleSettings = () => document.getElementById('settingsModal').classList.toggle('hidden');
-window.updateOpacity = (v) => { document.documentElement.style.setProperty('--glass-opacity', v); localStorage.setItem('p_opacity', v); };
-window.setBg = (val, mode) => { 
-    const b = document.getElementById('bodyBg');
-    
-    // 1. Reset everything first
-    b.style.backgroundImage = 'none';
-    b.style.backgroundColor = 'transparent';
-    
-    // 2. Apply New Theme
-    if (val.startsWith('#')) {
-        b.style.backgroundColor = val;
-    } else {
-        b.style.backgroundImage = `url('${val}')`;
-        b.style.backgroundSize = 'cover';
-        b.style.backgroundPosition = 'center';
-    }
+          }
 
-    // 3. Update Mode (Light/Dark)
-    b.classList.remove('light-mode', 'dark-mode');
-    b.classList.add(mode + '-mode');
 
-    // 4. Save to LocalStorage
-    localStorage.setItem('p_theme_val', val);
-    localStorage.setItem('p_theme_mode', mode);
-};
-window.handleImageUpload = (e) => { const r = new FileReader(); r.onload = (ev) => setBg(`url(${ev.target.result})`, 'dark'); r.readAsDataURL(e.target.files[0]); };
-function loadSavedTheme() {
-    const val = localStorage.getItem('p_theme_val') || 'assets/bg.webp';
-    const mode = localStorage.getItem('p_theme_mode') || 'light';
-    const op = localStorage.getItem('p_opacity') || '0.80';
-    
-    window.setBg(val, mode);
-    window.updateOpacity(op);
-}
-window.startPress = () => { isLongPress = false; pressTimer = setTimeout(() => { isLongPress = true; const display = document.getElementById('c'); if(display) display.value = ""; if(navigator.vibrate) navigator.vibrate(50); }, 600); };
-window.endPress = (k) => { clearTimeout(pressTimer); if(!isLongPress) { handleKey(k); } };
-window.restoreDefaults = () => {
-    if (confirm("Reset UI to default settings?")) {
-        // 1. Burahin ang TAMANG keys na ginagamit sa loadSavedTheme
-        localStorage.removeItem('p_theme_val');
-        localStorage.removeItem('p_theme_mode');
-        localStorage.removeItem('p_opacity');
-        
-        // 2. I-reset ang slider visual value
-        const slider = document.querySelector('input[type="range"]');
-        if(slider) slider.value = 0.80;
-        
-        // 3. I-apply ang default values manually para makita agad ang pagbabago
-        // Default values: bg.webp, light mode, 0.80 opacity
-        window.setBg('assets/bg.webp', 'light');
-        window.updateOpacity('0.80');
-        
-        // 4. Isara ang modal
+          if (navigator.vibrate) {
+
+            navigator.vibrate(
+              50
+            );
+
+          }
+
+        }, 600);
+
+    };
+
+
+    window.endPress = (k) => {
+
+      clearTimeout(
+        pressTimer
+      );
+
+
+      if (!isLongPress) {
+
+        handleKey(k);
+
+      }
+
+    };
+
+
+    /* =========================================================
+       RESTORE DEFAULTS
+       ========================================================= */
+
+    window.restoreDefaults = () => {
+
+      if (
+        confirm(
+          "Reset UI to default settings?"
+        )
+      ) {
+
+        localStorage.removeItem(
+          'p_theme_val'
+        );
+
+
+        localStorage.removeItem(
+          'p_theme_mode'
+        );
+
+
+        localStorage.removeItem(
+          'p_opacity'
+        );
+
+
+        const slider =
+          document.querySelector(
+            'input[type="range"]'
+          );
+
+
+        if (slider) {
+
+          slider.value =
+            0.80;
+
+        }
+
+
+        window.setBg(
+          'assets/bg.webp',
+          'light'
+        );
+
+
+        window.updateOpacity(
+          '0.80'
+        );
+
+
         toggleSettings();
-        
-        // 5. Feedback
-        if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
-        console.log("UI Restored to Defaults");
-    }
-};
-    if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker Registered'))
-        .catch(err => console.log('Service Worker Failed', err));
-    });
-  }
-// Live Signal Monitor for PowerCon
-setInterval(() => {
-    const status = document.getElementById('signalStatus');
-    if(!status) return;
 
-    if(navigator.onLine) {
-        status.innerText = "● ONLINE: READY TO SUBMIT";
-        status.style.color = "#10b981"; // Emerald Green
-        status.style.opacity = "1";
-    } else {
-        status.innerText = "● OFFLINE: FIND BETTER SIGNAL";
-        status.style.color = "#ef4444"; // Red
-        status.style.opacity = "1";
+
+        if (navigator.vibrate) {
+
+          navigator.vibrate(
+            [50,50,50]
+          );
+
+        }
+
+      }
+
+    };
+
+
+    /* =========================================================
+       SERVICE WORKER
+       ========================================================= */
+
+    if ('serviceWorker' in navigator) {
+
+      window.addEventListener(
+        'load',
+        () => {
+
+          navigator.serviceWorker
+            .register('sw.js')
+            .then(
+              reg =>
+                console.log(
+                  'Service Worker Registered'
+                )
+            )
+            .catch(
+              err =>
+                console.log(
+                  'Service Worker Failed',
+                  err
+                )
+            );
+
+        }
+      );
+
     }
-}, 2000);
-const app = new PowerCon();
-    </script>
+
+
+    /* =========================================================
+       LIVE SIGNAL MONITOR
+       ========================================================= */
+
+    setInterval(() => {
+
+      const status =
+        document.getElementById(
+          'signalStatus'
+        );
+
+
+      if (!status) return;
+
+
+      if (navigator.onLine) {
+
+        status.innerText =
+          "● ONLINE: READY TO SUBMIT";
+
+
+        status.style.color =
+          "#10b981";
+
+
+        status.style.opacity =
+          "1";
+
+      }
+
+      else {
+
+        status.innerText =
+          "● OFFLINE: FIND BETTER SIGNAL";
+
+
+        status.style.color =
+          "#ef4444";
+
+
+        status.style.opacity =
+          "1";
+
+      }
+
+    }, 2000);
+
+
+    /* =========================================================
+       START APPLICATION
+       ========================================================= */
+
+    const app =
+      new PowerCon();
+
+  </script>
+
 </body>
 </html>
