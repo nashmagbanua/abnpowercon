@@ -1,4 +1,4 @@
-const CACHE_NAME = 'powercon-cache-v1';
+const CACHE_NAME = 'powercon-cache-v2';
 const assets = [
   '/',
   'index.html',
