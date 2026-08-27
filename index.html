@@ -231,21 +231,27 @@
   margin-left: auto;
   margin-right: auto;
 
-  padding: 0.4rem 1rem;
-  border-radius: 0.6rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 0.75rem;
 
   background: rgba(72, 187, 120, 0.18);
-  border: 1px solid rgba(72, 187, 120, 0.35);
+  border: 1px solid rgba(72, 187, 120, 0.4);
 
   color: #48bb78;
 
-  font-size: 0.7rem;
+  /* DISPLAY LABEL */
+  font-size: clamp(1rem, 4vw, 1.4rem);
   font-weight: 900;
+  line-height: 1.1;
+
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 
-  line-height: 1.2;
+  white-space: nowrap;
+
+  /* Slight emphasis */
+  box-shadow: 0 4px 14px rgba(72, 187, 120, 0.12);
 }
 
     /* =========================================================
