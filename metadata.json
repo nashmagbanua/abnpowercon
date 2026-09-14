@@ -1,0 +1,6 @@
+{
+  "name": "ABN PowerCon",
+  "description": "Industrial Power Consumption Monitoring System",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

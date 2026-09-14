@@ -1,0 +1,14 @@
+{
+  "name": "abn-powercon",
+  "version": "1.0.0",
+  "description": "Industrial Power Consumption Monitoring System",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'Build successful'",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
