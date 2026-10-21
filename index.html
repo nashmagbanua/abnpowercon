@@ -25,8 +25,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
-  <!-- Offline-capable OCR (model caches after first load) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
@@ -158,11 +156,62 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      padding: 1.5rem;
+      padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+      box-sizing: border-box;
+    }
+
+    .modal .modal-content {
+      width: 100%;
+      max-width: 22rem;
+      max-height: min(90vh, 640px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 380px) {
+      .modal {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+
+      .modal .modal-content {
+        max-width: 100%;
+        padding: 1.35rem 1.15rem !important;
+        border-radius: 1.5rem !important;
+      }
     }
 
     .hidden {
       display: none !important;
+    }
+
+    /* Thanks / motivational modal */
+    #thanksModal .modal-content {
+      max-width: 22rem;
+    }
+
+    .thanks-emoji {
+      font-size: 2.75rem;
+      line-height: 1;
+      margin-bottom: 0.75rem;
+    }
+
+    .thanks-title {
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #10b981;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.65rem;
+    }
+
+    .thanks-message {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.45;
+      margin-bottom: 1.35rem;
+      opacity: 0.92;
     }
 
     .theme-preview {
@@ -516,252 +565,102 @@
         0 1px 3px rgba(0, 0, 0, 0.65);
     }
 
-    /* =========================================================
-       AUTO-HIDE BOTTOM BAR (Records)
-       ========================================================= */
-
     #recordsBottomActions {
-      transition:
-        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-        opacity 0.25s ease;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
       will-change: transform, opacity;
     }
-
     #recordsBottomActions.hidden-bar {
       transform: translateY(120%);
       opacity: 0;
       pointer-events: none;
     }
 
-    /* =========================================================
-       OCR / SCAN + CAMERA GUIDE
-       ========================================================= */
-
     .powercon-scan-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      width: 100%;
-      min-height: 48px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.75rem;
-      border-radius: 1rem;
-      border: 1.5px solid rgba(16, 185, 129, 0.35);
-      background: rgba(16, 185, 129, 0.12);
-      color: #10b981;
-      font-size: 0.72rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      user-select: none;
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      width: 100%; min-height: 48px; padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+      border-radius: 1rem; border: 1.5px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.12); color: #10b981;
+      font-size: 0.72rem; font-weight: 900; letter-spacing: 0.08em;
+      text-transform: uppercase; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: transform 0.15s ease, background 0.15s ease;
     }
-
-    .powercon-scan-btn:active {
-      transform: scale(0.97);
-      background: rgba(16, 185, 129, 0.22);
-    }
-
-    .powercon-scan-btn:disabled {
-      opacity: 0.55;
-      pointer-events: none;
-    }
+    .powercon-scan-btn:active { transform: scale(0.97); background: rgba(16, 185, 129, 0.22); }
+    .powercon-scan-btn:disabled { opacity: 0.55; pointer-events: none; }
 
     #ocrCameraModal {
-      position: fixed;
-      inset: 0;
-      z-index: 100000;
-      background: #000;
-      display: flex;
-      flex-direction: column;
+      position: fixed; inset: 0; z-index: 100000; background: #000;
+      display: flex; flex-direction: column;
     }
-
-    #ocrCameraModal.hidden {
-      display: none !important;
-    }
-
+    #ocrCameraModal.hidden { display: none !important; }
     #ocrVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: #000;
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; background: #000;
     }
-
     .ocr-guide-layer {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 2;
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; pointer-events: none; z-index: 2;
     }
-
-    /* Dim outside the green box using box-shadow */
     .ocr-guide-box {
-      width: min(88vw, 420px);
-      height: min(22vw, 110px);
-      min-height: 72px;
-      border: 3px solid #10b981;
-      border-radius: 12px;
-      box-shadow:
-        0 0 0 9999px rgba(0, 0, 0, 0.55),
-        0 0 0 3px rgba(16, 185, 129, 0.35),
-        0 0 24px rgba(16, 185, 129, 0.45);
-      background: transparent;
+      width: min(88vw, 420px); height: min(22vw, 110px); min-height: 72px;
+      border: 3px solid #10b981; border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.55), 0 0 0 3px rgba(16,185,129,0.35), 0 0 24px rgba(16,185,129,0.45);
       position: relative;
     }
-
     .ocr-guide-box::after {
-      content: '';
-      position: absolute;
-      inset: 6px;
-      border: 1px dashed rgba(52, 211, 153, 0.55);
-      border-radius: 8px;
-      pointer-events: none;
+      content: ''; position: absolute; inset: 6px;
+      border: 1px dashed rgba(52,211,153,0.55); border-radius: 8px;
     }
-
     .ocr-guide-label {
-      margin-top: 14px;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      background: rgba(16, 185, 129, 0.92);
-      color: #fff;
-      font-size: 0.68rem;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      text-align: center;
-      max-width: 90vw;
-      line-height: 1.3;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      margin-top: 14px; padding: 0.45rem 0.9rem; border-radius: 999px;
+      background: rgba(16,185,129,0.92); color: #fff;
+      font-size: 0.68rem; font-weight: 900; letter-spacing: 0.06em;
+      text-transform: uppercase; text-align: center; max-width: 90vw;
     }
-
     .ocr-camera-top {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 3;
-      padding: 1rem 1rem 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
-      pointer-events: none;
+      position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+      padding: 1rem 1rem 0.5rem; display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent); pointer-events: none;
     }
-
-    .ocr-camera-top button {
-      pointer-events: auto;
-    }
-
+    .ocr-camera-top button { pointer-events: auto; }
     .ocr-camera-bottom {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 3;
-      padding: 1rem 1.25rem 1.75rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+      padding: 1rem 1.25rem 1.75rem; display: flex; flex-direction: column;
+      align-items: center; gap: 0.75rem;
       background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
     }
-
     .ocr-capture-btn {
-      width: 72px;
-      height: 72px;
-      border-radius: 999px;
-      border: 4px solid #fff;
-      background: #10b981;
-      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.35);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+      width: 72px; height: 72px; border-radius: 999px; border: 4px solid #fff;
+      background: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.35); cursor: pointer;
     }
-
-    .ocr-capture-btn:active {
-      transform: scale(0.94);
-      background: #059669;
-    }
-
-    .ocr-capture-btn:disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
+    .ocr-capture-btn:active { transform: scale(0.94); background: #059669; }
+    .ocr-capture-btn:disabled { opacity: 0.5; pointer-events: none; }
     .ocr-hint {
-      color: rgba(255,255,255,0.85);
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      text-align: center;
+      color: rgba(255,255,255,0.85); font-size: 0.65rem; font-weight: 800;
+      letter-spacing: 0.05em; text-transform: uppercase; text-align: center;
     }
-
     #ocrOverlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100001;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 1.5rem;
+      position: fixed; inset: 0; z-index: 100001; display: flex;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.82); backdrop-filter: blur(8px); padding: 1.5rem;
     }
-
-    #ocrOverlay.hidden {
-      display: none !important;
-    }
-
+    #ocrOverlay.hidden { display: none !important; }
     .ocr-panel {
-      width: 100%;
-      max-width: 300px;
-      border-radius: 1.75rem;
-      padding: 1.75rem 1.5rem;
-      text-align: center;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      color: #fff;
+      width: 100%; max-width: 300px; border-radius: 1.75rem; padding: 1.75rem 1.5rem;
+      text-align: center; background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(16,185,129,0.25); color: #fff;
     }
-
     .ocr-spinner {
-      width: 36px;
-      height: 36px;
-      margin: 0 auto 1rem;
-      border: 3px solid rgba(16, 185, 129, 0.2);
-      border-top-color: #10b981;
-      border-radius: 50%;
-      animation: ocrSpin 0.7s linear infinite;
+      width: 36px; height: 36px; margin: 0 auto 1rem;
+      border: 3px solid rgba(16,185,129,0.2); border-top-color: #10b981;
+      border-radius: 50%; animation: ocrSpin 0.7s linear infinite;
     }
-
-    @keyframes ocrSpin {
-      to { transform: rotate(360deg); }
-    }
-
+    @keyframes ocrSpin { to { transform: rotate(360deg); } }
     .ocr-title {
-      font-size: 0.85rem;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #34d399;
-      margin-bottom: 0.4rem;
+      font-size: 0.85rem; font-weight: 900; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #34d399; margin-bottom: 0.4rem;
     }
-
-    .ocr-status {
-      font-size: 0.7rem;
-      font-weight: 700;
-      opacity: 0.65;
-      line-height: 1.35;
-    }
+    .ocr-status { font-size: 0.7rem; font-weight: 700; opacity: 0.65; line-height: 1.35; }
 
     /* =========================================================
        VIEW LOGSHEET
@@ -1258,52 +1157,45 @@
 
 
   <!-- =========================================================
-       OCR CAMERA (green guide box)
+       THANKS / MOTIVATIONAL MODAL
        ========================================================= -->
 
-  <div id="ocrCameraModal" class="hidden">
-
-    <video id="ocrVideo" playsinline muted autoplay></video>
-
-    <div class="ocr-camera-top">
+  <div id="thanksModal" class="modal hidden">
+    <div class="modal-content rounded-[2rem] p-6 sm:p-8 w-full max-w-sm mx-auto text-center shadow-2xl">
+      <div class="thanks-emoji" id="thanksEmoji">💪</div>
+      <div class="thanks-title">Salamat!</div>
+      <p class="thanks-message" id="thanksMessage">
+        Salamat sa sipag mo ngayong araw!
+      </p>
       <button
         type="button"
-        onclick="window.closeOcrCamera()"
-        class="px-4 py-2 rounded-xl bg-white/15 text-white text-[10px] font-black uppercase tracking-widest border border-white/20"
+        onclick="window.closeThanksModal()"
+        class="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl text-sm uppercase active:scale-[0.98] transition-all"
       >
-        Cancel
+        Sige, Tuloy!
       </button>
-      <span class="text-white text-[10px] font-black uppercase tracking-widest opacity-80">
-        Align LCD
-      </span>
-      <span style="width:4.5rem"></span>
     </div>
-
-    <div class="ocr-guide-layer">
-      <div id="ocrGuideBox" class="ocr-guide-box"></div>
-      <div class="ocr-guide-label">
-        I-align ang LCD ng meter sa green box
-      </div>
-    </div>
-
-    <div class="ocr-camera-bottom">
-      <div class="ocr-hint">Tap capture kapag klaro ang digits</div>
-      <button
-        type="button"
-        id="ocrCaptureBtn"
-        class="ocr-capture-btn"
-        onclick="window.captureOcrFrame()"
-        aria-label="Capture"
-      ></button>
-    </div>
-
   </div>
 
 
-  <!-- =========================================================
-       OCR PROCESSING OVERLAY
-       ========================================================= -->
-
+  <!-- OCR CAMERA + PROCESSING -->
+  <div id="ocrCameraModal" class="hidden">
+    <video id="ocrVideo" playsinline muted autoplay></video>
+    <div class="ocr-camera-top">
+      <button type="button" onclick="window.closeOcrCamera()"
+        class="px-4 py-2 rounded-xl bg-white/15 text-white text-[10px] font-black uppercase tracking-widest border border-white/20">Cancel</button>
+      <span class="text-white text-[10px] font-black uppercase tracking-widest opacity-80">Align LCD</span>
+      <span style="width:4.5rem"></span>
+    </div>
+    <div class="ocr-guide-layer">
+      <div id="ocrGuideBox" class="ocr-guide-box"></div>
+      <div class="ocr-guide-label">I-align ang LCD ng meter sa green box</div>
+    </div>
+    <div class="ocr-camera-bottom">
+      <div class="ocr-hint">Tap capture kapag klaro ang digits</div>
+      <button type="button" id="ocrCaptureBtn" class="ocr-capture-btn" onclick="window.captureOcrFrame()" aria-label="Capture"></button>
+    </div>
+  </div>
   <div id="ocrOverlay" class="hidden">
     <div class="ocr-panel">
       <div class="ocr-spinner"></div>
@@ -2157,14 +2049,7 @@
 
           </div>
 
-
-          <!-- OCR SCAN -->
-          <button
-            type="button"
-            id="ocrScanBtn"
-            class="powercon-scan-btn"
-            onclick="window.startOcrScan()"
-          >
+          <button type="button" id="ocrScanBtn" class="powercon-scan-btn" onclick="window.startOcrScan()">
             📷 Scan Meter
           </button>
 
@@ -3677,19 +3562,21 @@ catch (e) {
             <div
               class="
                 modal-content
-                rounded-[2.5rem]
-                p-8
-                max-w-xs
+                rounded-[2rem]
+                p-6 sm:p-8
+                w-full
+                max-w-sm
                 mx-auto
                 text-center
+                shadow-2xl
               "
             >
 
               <h3
                 class="
-                  text-lg
+                  text-base sm:text-lg
                   font-black
-                  mb-4
+                  mb-3
                 "
               >
                 Enter Operator Name
@@ -3702,12 +3589,14 @@ catch (e) {
                 placeholder="Operator Name"
                 class="
                   w-full
-                  p-3
+                  p-3.5
                   rounded-xl
                   border
                   border-gray-300
-                  mb-4
+                  mb-3
                   text-center
+                  text-base
+                  font-bold
                 "
               >
 
@@ -3715,10 +3604,10 @@ catch (e) {
               <p
                 id="signalStatus"
                 class="
-                  text-[8px]
+                  text-[9px]
                   font-bold
                   uppercase
-                  mb-4
+                  mb-3
                   opacity-50
                   italic
                   transition-all
@@ -3751,6 +3640,9 @@ catch (e) {
                   font-black
                   rounded-2xl
                   mb-2
+                  text-sm
+                  active:scale-[0.98]
+                  transition-all
                 "
               >
                 Submit
@@ -3765,11 +3657,14 @@ catch (e) {
                 "
                 class="
                   w-full
-                  py-4
+                  py-3.5
                   bg-gray-400
                   text-white
                   font-black
                   rounded-2xl
+                  text-sm
+                  active:scale-[0.98]
+                  transition-all
                 "
               >
                 Cancel
@@ -3904,9 +3799,12 @@ catch (e) {
           );
 
 
-          alert(
-            "✅ LOGSHEET SUBMITTED!"
-          );
+          // Random Tagalog motivational thank-you
+          if (typeof window.showThanksModal === 'function') {
+            window.showThanksModal(opName);
+          } else {
+            alert('✅ LOGSHEET SUBMITTED!');
+          }
 
         }
 
@@ -5009,379 +4907,301 @@ const app =
 
 
 /* =========================================================
-   AUTO-HIDE BOTTOM BAR ON SCROLL (Records view)
+   MOTIVATIONAL THANK-YOU (after operator submit)
+   10 Tagalog messages — random each time
    ========================================================= */
 
-(function setupRecordsAutoHideBar() {
+const POWERCON_THANKS = [
 
-  let lastY = 0;
-  let ticking = false;
-  const THRESHOLD = 6;
-
-  function getScrollY() {
-    return window.pageYOffset
-      || document.documentElement.scrollTop
-      || document.body.scrollTop
-      || 0;
+  {
+    emoji: '💪',
+    text: 'Salamat sa sipag mo! Dahil sa’yo, kompletong-kompleto ang readings ngayong araw.'
+  },
+  {
+    emoji: '⭐',
+    text: 'Ang galing! Pinaghirapan mo ang bawat reading — deserve mo ang pahinga pagkatapos nito.'
+  },
+  {
+    emoji: '🙌',
+    text: 'Maraming salamat! Ang disiplina mong mag-log araw-araw ay malaking tulong sa kumpanya.'
+  },
+  {
+    emoji: '🔥',
+    text: 'Solid ang trabaho mo ngayon! Keep it up — proud kami sa dedication mo.'
+  },
+  {
+    emoji: '👏',
+    text: 'Salamat sa tiyaga! Hindi biro ang bilangin at i-record ang lahat ng equipment.'
+  },
+  {
+    emoji: '🌟',
+    text: 'Napakasipag mo! Ang maayos mong logsheet ay nagsasalita ng professionalism.'
+  },
+  {
+    emoji: '💼',
+    text: 'Job well done! Salamat sa oras at effort na inilaan mo para sa accurate readings.'
+  },
+  {
+    emoji: '🚀',
+    text: 'Isa ka pang successful submission! Tuloy-tuloy ang galing — kaya mo ’yan araw-araw.'
+  },
+  {
+    emoji: '❤️',
+    text: 'Salamat mula sa POWERCON team! Ang sipag mo ay inspirasyon sa buong Utilities/Process.'
+  },
+  {
+    emoji: '🏆',
+    text: 'Congratulations sa completed logsheet! Small steps araw-araw, malaking impact sa operations.'
   }
 
-  function updateBar() {
+];
+
+
+window.showThanksModal = function (operatorName) {
+
+  const modal = document.getElementById('thanksModal');
+  const msgEl = document.getElementById('thanksMessage');
+  const emojiEl = document.getElementById('thanksEmoji');
+
+  if (!modal || !msgEl) return;
+
+  const pick =
+    POWERCON_THANKS[
+      Math.floor(Math.random() * POWERCON_THANKS.length)
+    ];
+
+  if (emojiEl) emojiEl.textContent = pick.emoji;
+
+  const name = (operatorName || '').trim();
+  msgEl.textContent = name
+    ? `${name}, ${pick.text}`
+    : pick.text;
+
+  modal.classList.remove('hidden');
+
+  if (navigator.vibrate) {
+    navigator.vibrate([40, 40, 40]);
+  }
+
+};
+
+
+window.closeThanksModal = function () {
+
+  const modal = document.getElementById('thanksModal');
+  if (modal) modal.classList.add('hidden');
+
+};
+
+
+/* =========================================================
+   AUTO-HIDE BOTTOM BAR (Records)
+   ========================================================= */
+
+(function () {
+  let lastY = 0, ticking = false;
+  const THRESHOLD = 6;
+  function getY() {
+    return window.pageYOffset || document.documentElement.scrollTop || 0;
+  }
+  function update() {
     ticking = false;
-
-    if (!window.app || app.state.view !== 'records') {
-      lastY = getScrollY();
-      return;
-    }
-
+    if (!window.app || app.state.view !== 'records') { lastY = getY(); return; }
     const bar = document.getElementById('recordsBottomActions');
     if (!bar) return;
-
-    const y = getScrollY();
-
-    if (y < 80) {
-      bar.classList.remove('hidden-bar');
-    } else if (y > lastY + THRESHOLD) {
-      bar.classList.add('hidden-bar');
-    } else if (y < lastY - THRESHOLD) {
-      bar.classList.remove('hidden-bar');
-    }
-
+    const y = getY();
+    if (y < 80) bar.classList.remove('hidden-bar');
+    else if (y > lastY + THRESHOLD) bar.classList.add('hidden-bar');
+    else if (y < lastY - THRESHOLD) bar.classList.remove('hidden-bar');
     lastY = y;
   }
-
-  function onScroll() {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(updateBar);
-    }
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-  document.addEventListener('scroll', onScroll, { passive: true, capture: true });
-
-  const origRender = PowerCon.prototype.render;
+  window.addEventListener('scroll', () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  const orig = PowerCon.prototype.render;
   PowerCon.prototype.render = function () {
-    origRender.call(this);
+    orig.call(this);
     if (this.state.view === 'records') {
       requestAnimationFrame(() => {
         const bar = document.getElementById('recordsBottomActions');
         if (bar) bar.classList.remove('hidden-bar');
-        lastY = getScrollY();
+        lastY = getY();
       });
     }
   };
-
 })();
 
 
 /* =========================================================
-   OCR — Live camera + green guide box + Tesseract
+   OCR — camera + green guide + Tesseract
    ========================================================= */
 
-(function setupOcr() {
+(function () {
+  let ocrWorker = null, ocrBusy = false, mediaStream = null;
 
-  let ocrWorker = null;
-  let ocrBusy = false;
-  let mediaStream = null;
-
-  function showOcrOverlay(title, status) {
-    const overlay = document.getElementById('ocrOverlay');
+  function showOcr(title, status) {
+    const o = document.getElementById('ocrOverlay');
     const t = document.getElementById('ocrTitle');
     const s = document.getElementById('ocrStatus');
     if (t) t.textContent = title || 'Scanning';
-    if (s) s.textContent = status || 'Reading meter digits…';
-    if (overlay) overlay.classList.remove('hidden');
+    if (s) s.textContent = status || 'Reading…';
+    if (o) o.classList.remove('hidden');
   }
-
-  function hideOcrOverlay() {
-    const overlay = document.getElementById('ocrOverlay');
-    if (overlay) overlay.classList.add('hidden');
+  function hideOcr() {
+    const o = document.getElementById('ocrOverlay');
+    if (o) o.classList.add('hidden');
   }
-
-  function setScanBusy(busy) {
-    ocrBusy = busy;
+  function setBusy(b) {
+    ocrBusy = b;
     const btn = document.getElementById('ocrScanBtn');
-    if (btn) btn.disabled = !!busy;
     const cap = document.getElementById('ocrCaptureBtn');
-    if (cap) cap.disabled = !!busy;
+    if (btn) btn.disabled = !!b;
+    if (cap) cap.disabled = !!b;
   }
-
-  function stopCamera() {
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(t => t.stop());
-      mediaStream = null;
-    }
-    const video = document.getElementById('ocrVideo');
-    if (video) {
-      video.srcObject = null;
-    }
+  function stopCam() {
+    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+    const v = document.getElementById('ocrVideo');
+    if (v) v.srcObject = null;
   }
-
   window.closeOcrCamera = function () {
-    stopCamera();
-    const modal = document.getElementById('ocrCameraModal');
-    if (modal) modal.classList.add('hidden');
+    stopCam();
+    const m = document.getElementById('ocrCameraModal');
+    if (m) m.classList.add('hidden');
   };
 
-  /**
-   * Map green box (screen coords) → video pixel crop
-   * Handles object-fit: cover
-   */
-  function cropGuideFromVideo(video, guideEl) {
+  function cropGuide(video, guideEl) {
     const vRect = video.getBoundingClientRect();
     const gRect = guideEl.getBoundingClientRect();
-
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
+    const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh) throw new Error('Camera not ready');
-
-    const dispW = vRect.width;
-    const dispH = vRect.height;
-
-    // object-fit: cover scale
-    const scale = Math.max(dispW / vw, dispH / vh);
-    const drawnW = vw * scale;
-    const drawnH = vh * scale;
-    const offsetX = (dispW - drawnW) / 2;
-    const offsetY = (dispH - drawnH) / 2;
-
-    // Guide relative to video element
-    const gx = gRect.left - vRect.left;
-    const gy = gRect.top - vRect.top;
-    const gw = gRect.width;
-    const gh = gRect.height;
-
-    // Map to source video pixels
-    let sx = (gx - offsetX) / scale;
-    let sy = (gy - offsetY) / scale;
-    let sw = gw / scale;
-    let sh = gh / scale;
-
-    // Clamp
-    sx = Math.max(0, Math.min(vw - 1, sx));
-    sy = Math.max(0, Math.min(vh - 1, sy));
-    sw = Math.max(1, Math.min(vw - sx, sw));
-    sh = Math.max(1, Math.min(vh - sy, sh));
-
-    // Slight expand for margins (helps digits near edges)
-    const padX = sw * 0.04;
-    const padY = sh * 0.12;
+    const scale = Math.max(vRect.width / vw, vRect.height / vh);
+    const drawnW = vw * scale, drawnH = vh * scale;
+    const offsetX = (vRect.width - drawnW) / 2;
+    const offsetY = (vRect.height - drawnH) / 2;
+    let sx = (gRect.left - vRect.left - offsetX) / scale;
+    let sy = (gRect.top - vRect.top - offsetY) / scale;
+    let sw = gRect.width / scale;
+    let sh = gRect.height / scale;
+    const padX = sw * 0.04, padY = sh * 0.12;
     sx = Math.max(0, sx - padX);
     sy = Math.max(0, sy - padY);
     sw = Math.min(vw - sx, sw + padX * 2);
     sh = Math.min(vh - sy, sh + padY * 2);
-
-    const canvas = document.createElement('canvas');
-    // Upscale small crops a bit for OCR
     const outW = Math.max(Math.round(sw), 640);
     const outH = Math.round(sh * (outW / sw));
-    canvas.width = outW;
-    canvas.height = outH;
-
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
-
-    // Grayscale + contrast
     const imageData = ctx.getImageData(0, 0, outW, outH);
     const d = imageData.data;
-    const contrast = 1.55;
-    const intercept = 128 * (1 - contrast);
-
+    const contrast = 1.55, intercept = 128 * (1 - contrast);
     for (let i = 0; i < d.length; i += 4) {
       const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       let v = contrast * gray + intercept;
       v = v < 0 ? 0 : v > 255 ? 255 : v;
       d[i] = d[i + 1] = d[i + 2] = v;
     }
-
     ctx.putImageData(imageData, 0, 0);
     return canvas;
   }
 
   function extractReading(text) {
     if (!text) return '';
-
-    const cleaned = String(text).replace(/[^\d.]/g, ' ');
-    const matches = cleaned.match(/\d+(?:\.\d+)?/g);
+    const matches = String(text).replace(/[^\d.]/g, ' ').match(/\d+(?:\.\d+)?/g);
     if (!matches || !matches.length) return '';
-
-    // Prefer longest (main kWh reading like 127487.452)
     matches.sort((a, b) => b.length - a.length);
     let best = matches[0];
-
     if (best.includes('.')) {
-      const parts = best.split('.');
-      best = parts[0] + '.' + (parts[1] || '').slice(0, 4);
+      const p = best.split('.');
+      best = p[0] + '.' + (p[1] || '').slice(0, 4);
     }
-
-    if (/^0\d+/.test(best) && !best.startsWith('0.')) {
-      best = String(parseFloat(best));
-    }
-
     return best;
   }
 
   async function ensureWorker() {
     if (ocrWorker) return ocrWorker;
-
-    if (typeof Tesseract === 'undefined') {
-      throw new Error('OCR library not loaded. Kailangan ng internet sa unang load.');
-    }
-
-    showOcrOverlay('Preparing OCR', 'Downloading model (first time only)…');
-
+    if (typeof Tesseract === 'undefined') throw new Error('OCR library not loaded');
+    showOcr('Preparing OCR', 'Downloading model (first time only)…');
     ocrWorker = await Tesseract.createWorker('eng', 1, {
       logger: (m) => {
-        if (m.status === 'loading tesseract core') {
-          showOcrOverlay('Preparing OCR', 'Loading engine…');
-        } else if (m.status === 'loading language traineddata') {
-          showOcrOverlay('Preparing OCR', 'Downloading language data…');
-        } else if (m.status === 'initializing api') {
-          showOcrOverlay('Preparing OCR', 'Initializing…');
-        } else if (m.status === 'recognizing text') {
-          const pct = m.progress != null
-            ? Math.round(m.progress * 100) + '%'
-            : '';
-          showOcrOverlay('Scanning', 'Reading digits… ' + pct);
+        if (m.status === 'recognizing text') {
+          const pct = m.progress != null ? Math.round(m.progress * 100) + '%' : '';
+          showOcr('Scanning', 'Reading digits… ' + pct);
         }
       }
     });
-
     await ocrWorker.setParameters({
       tessedit_char_whitelist: '0123456789.',
       preserve_interword_spaces: '0'
     });
-
     return ocrWorker;
   }
 
-  function applyReadingToInput(reading) {
+  function applyReading(reading) {
     const c = document.getElementById('c');
     if (!c) return;
-
     c.value = reading;
-
     const p = document.getElementById('p');
     const currentVal = parseFloat(c.value) || 0;
     const prevVal = parseFloat(p && p.value) || 0;
-
-    const editingPrevious =
-      app.state.isSingleEdit &&
-      app.state.editField === 'previous';
-
-    if (editingPrevious) {
-      const eq = MOCK_EQUIPMENT[app.state.currentIndex];
-      const existingCurrent = parseFloat(
-        app.state.cloudReadings[eq.id]?.curr
-      ) || 0;
-      c.style.color =
-        currentVal > existingCurrent ? '#ef4444' : '#10b981';
-    } else if (currentVal < prevVal) {
-      c.style.color = '#ef4444';
-    } else if (currentVal > prevVal + 2000000) {
-      c.style.color = '#f59e0b';
-    } else {
-      c.style.color = '#10b981';
-    }
-
+    if (currentVal < prevVal) c.style.color = '#ef4444';
+    else if (currentVal > prevVal + 2000000) c.style.color = '#f59e0b';
+    else c.style.color = '#10b981';
     if (navigator.vibrate) navigator.vibrate(30);
   }
 
   window.startOcrScan = async function () {
-    if (ocrBusy) return;
-    if (!window.app || app.state.view !== 'reading') return;
-
+    if (ocrBusy || !window.app || app.state.view !== 'reading') return;
     const modal = document.getElementById('ocrCameraModal');
     const video = document.getElementById('ocrVideo');
     if (!modal || !video) return;
-
     try {
-      // Prefer rear camera
       mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
       });
-    } catch (err) {
-      console.error(err);
-      alert(
-        '❌ Hindi ma-access ang camera.\n\n' +
-        'Payagan ang camera permission, o subukan ulit.'
-      );
+    } catch (e) {
+      alert('❌ Hindi ma-access ang camera.\n\nPayagan ang camera permission.');
       return;
     }
-
     video.srcObject = mediaStream;
-    try {
-      await video.play();
-    } catch (_) { /* autoplay may need user gesture — already have it */ }
-
+    try { await video.play(); } catch (_) {}
     modal.classList.remove('hidden');
   };
 
   window.captureOcrFrame = async function () {
     if (ocrBusy) return;
-
     const video = document.getElementById('ocrVideo');
     const guide = document.getElementById('ocrGuideBox');
-    if (!video || !guide) return;
-
-    if (!video.videoWidth) {
+    if (!video || !guide || !video.videoWidth) {
       alert('Camera not ready. Sandali lang.');
       return;
     }
-
-    setScanBusy(true);
-
+    setBusy(true);
     try {
-      showOcrOverlay('Processing', 'Cropping LCD area…');
-
-      const canvas = cropGuideFromVideo(video, guide);
-
-      // Close camera ASAP to free resources
+      showOcr('Processing', 'Cropping LCD area…');
+      const canvas = cropGuide(video, guide);
       window.closeOcrCamera();
-
       const worker = await ensureWorker();
-
-      showOcrOverlay('Scanning', 'Reading meter digits…');
-
+      showOcr('Scanning', 'Reading meter digits…');
       const result = await worker.recognize(canvas);
-      const raw = (result && result.data && result.data.text) || '';
-      const reading = extractReading(raw);
-
-      hideOcrOverlay();
-
+      const reading = extractReading((result && result.data && result.data.text) || '');
+      hideOcr();
       if (!reading) {
-        alert(
-          '⚠️ Walang nakitang numero.\n\n' +
-          'Tips:\n' +
-          '• I-align ang LCD sa loob ng green box\n' +
-          '• Iwasan ang glare / reflection\n' +
-          '• Mas malapit nang kaunti'
-        );
+        alert('⚠️ Walang nakitang numero.\n\nI-align ang LCD sa green box at iwasan ang glare.');
         return;
       }
-
-      applyReadingToInput(reading);
-
+      applyReading(reading);
     } catch (err) {
-      console.error('OCR error:', err);
-      hideOcrOverlay();
+      console.error(err);
+      hideOcr();
       window.closeOcrCamera();
-      alert(
-        '❌ OCR failed.\n\n' +
-        (err && err.message ? err.message : 'Unknown error') +
-        '\n\nUnang gamit: kailangan ng internet para i-download ang OCR model.'
-      );
+      alert('❌ OCR failed.\n\n' + (err && err.message ? err.message : 'Unknown error'));
     } finally {
-      setScanBusy(false);
+      setBusy(false);
     }
   };
-
 })();
 
 
