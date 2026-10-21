@@ -514,6 +514,23 @@
     }
 
     /* =========================================================
+       AUTO-HIDE BOTTOM BAR (Records)
+       ========================================================= */
+
+    #recordsBottomActions {
+      transition:
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.25s ease;
+      will-change: transform, opacity;
+    }
+
+    #recordsBottomActions.hidden-bar {
+      transform: translateY(120%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* =========================================================
        VIEW LOGSHEET
        ========================================================= */
 
@@ -2499,6 +2516,7 @@
           <!-- BOTTOM ACTIONS -->
 
           <div
+            id="recordsBottomActions"
             class="
               fixed
               bottom-0
@@ -4688,6 +4706,81 @@ catch (e) {
 
 const app =
   new PowerCon();
+
+
+/* =========================================================
+   AUTO-HIDE BOTTOM BAR ON SCROLL (Records view)
+   Hide when scrolling down · Show when scrolling up
+   ========================================================= */
+
+(function setupRecordsAutoHideBar() {
+
+  let lastY = 0;
+  let ticking = false;
+  const THRESHOLD = 6;
+
+  function getScrollY() {
+    return window.pageYOffset
+      || document.documentElement.scrollTop
+      || document.body.scrollTop
+      || 0;
+  }
+
+  function updateBar() {
+    ticking = false;
+
+    // Only active on records view
+    if (!window.app || app.state.view !== 'records') {
+      lastY = getScrollY();
+      return;
+    }
+
+    const bar = document.getElementById('recordsBottomActions');
+    if (!bar) return;
+
+    const y = getScrollY();
+
+    // Always show near top
+    if (y < 80) {
+      bar.classList.remove('hidden-bar');
+    }
+    // Scrolling down → hide
+    else if (y > lastY + THRESHOLD) {
+      bar.classList.add('hidden-bar');
+    }
+    // Scrolling up → show
+    else if (y < lastY - THRESHOLD) {
+      bar.classList.remove('hidden-bar');
+    }
+
+    lastY = y;
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(updateBar);
+    }
+  }
+
+  // Listen on window + document (covers mobile & desktop)
+  window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+
+  // When records view is shown, force bar visible
+  const origRender = PowerCon.prototype.render;
+  PowerCon.prototype.render = function () {
+    origRender.call(this);
+    if (this.state.view === 'records') {
+      requestAnimationFrame(() => {
+        const bar = document.getElementById('recordsBottomActions');
+        if (bar) bar.classList.remove('hidden-bar');
+        lastY = getScrollY();
+      });
+    }
+  };
+
+})();
 
 
 /* =========================================================
