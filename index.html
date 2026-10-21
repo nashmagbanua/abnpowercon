@@ -26,6 +26,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
+  <!-- Offline-capable OCR (model caches after first load) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
   <style>
 
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap');
@@ -531,6 +534,101 @@
     }
 
     /* =========================================================
+       OCR / SCAN
+       ========================================================= */
+
+    .powercon-scan-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
+      min-height: 48px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: 1rem;
+      border: 1.5px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .powercon-scan-btn:active {
+      transform: scale(0.97);
+      background: rgba(16, 185, 129, 0.22);
+    }
+
+    .powercon-scan-btn:disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    #ocrOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 1.5rem;
+    }
+
+    #ocrOverlay.hidden {
+      display: none !important;
+    }
+
+    .ocr-panel {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 1.75rem;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #fff;
+    }
+
+    .ocr-spinner {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 1rem;
+      border: 3px solid rgba(16, 185, 129, 0.2);
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: ocrSpin 0.7s linear infinite;
+    }
+
+    @keyframes ocrSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ocr-title {
+      font-size: 0.85rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #34d399;
+      margin-bottom: 0.4rem;
+    }
+
+    .ocr-status {
+      font-size: 0.7rem;
+      font-weight: 700;
+      opacity: 0.65;
+      line-height: 1.35;
+    }
+
+    /* =========================================================
        VIEW LOGSHEET
        ========================================================= */
 
@@ -1021,6 +1119,19 @@
 
     </div>
 
+  </div>
+
+
+  <!-- =========================================================
+       OCR OVERLAY
+       ========================================================= -->
+
+  <div id="ocrOverlay" class="hidden">
+    <div class="ocr-panel">
+      <div class="ocr-spinner"></div>
+      <div class="ocr-title" id="ocrTitle">Scanning</div>
+      <div class="ocr-status" id="ocrStatus">Reading meter digits…</div>
+    </div>
   </div>
 
 
@@ -1867,6 +1978,26 @@
             >
 
           </div>
+
+
+          <!-- OCR SCAN -->
+          <button
+            type="button"
+            id="ocrScanBtn"
+            class="powercon-scan-btn"
+            onclick="window.startOcrScan()"
+          >
+            📷 Scan Meter
+          </button>
+
+          <input
+            type="file"
+            id="ocrFileInput"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            onchange="window.handleOcrFile(event)"
+          >
 
 
           ${
@@ -4710,7 +4841,6 @@ const app =
 
 /* =========================================================
    AUTO-HIDE BOTTOM BAR ON SCROLL (Records view)
-   Hide when scrolling down · Show when scrolling up
    ========================================================= */
 
 (function setupRecordsAutoHideBar() {
@@ -4729,7 +4859,6 @@ const app =
   function updateBar() {
     ticking = false;
 
-    // Only active on records view
     if (!window.app || app.state.view !== 'records') {
       lastY = getScrollY();
       return;
@@ -4740,16 +4869,11 @@ const app =
 
     const y = getScrollY();
 
-    // Always show near top
     if (y < 80) {
       bar.classList.remove('hidden-bar');
-    }
-    // Scrolling down → hide
-    else if (y > lastY + THRESHOLD) {
+    } else if (y > lastY + THRESHOLD) {
       bar.classList.add('hidden-bar');
-    }
-    // Scrolling up → show
-    else if (y < lastY - THRESHOLD) {
+    } else if (y < lastY - THRESHOLD) {
       bar.classList.remove('hidden-bar');
     }
 
@@ -4763,11 +4887,9 @@ const app =
     }
   }
 
-  // Listen on window + document (covers mobile & desktop)
   window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('scroll', onScroll, { passive: true, capture: true });
 
-  // When records view is shown, force bar visible
   const origRender = PowerCon.prototype.render;
   PowerCon.prototype.render = function () {
     origRender.call(this);
@@ -4777,6 +4899,256 @@ const app =
         if (bar) bar.classList.remove('hidden-bar');
         lastY = getScrollY();
       });
+    }
+  };
+
+})();
+
+
+/* =========================================================
+   OCR — Scan meter digits (Tesseract.js, offline after cache)
+   ========================================================= */
+
+(function setupOcr() {
+
+  let ocrWorker = null;
+  let ocrBusy = false;
+
+  function showOcrOverlay(title, status) {
+    const overlay = document.getElementById('ocrOverlay');
+    const t = document.getElementById('ocrTitle');
+    const s = document.getElementById('ocrStatus');
+    if (t) t.textContent = title || 'Scanning';
+    if (s) s.textContent = status || 'Reading meter digits…';
+    if (overlay) overlay.classList.remove('hidden');
+  }
+
+  function hideOcrOverlay() {
+    const overlay = document.getElementById('ocrOverlay');
+    if (overlay) overlay.classList.add('hidden');
+  }
+
+  function setScanBusy(busy) {
+    ocrBusy = busy;
+    const btn = document.getElementById('ocrScanBtn');
+    if (btn) btn.disabled = !!busy;
+  }
+
+  /**
+   * Preprocess: grayscale + contrast boost for LCD / meter digits
+   */
+  function preprocessImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        try {
+          const maxW = 1280;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+
+          if (w > maxW) {
+            h = Math.round(h * (maxW / w));
+            w = maxW;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const imageData = ctx.getImageData(0, 0, w, h);
+          const d = imageData.data;
+          const contrast = 1.45;
+          const intercept = 128 * (1 - contrast);
+
+          for (let i = 0; i < d.length; i += 4) {
+            const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            let v = contrast * gray + intercept;
+            v = v < 0 ? 0 : v > 255 ? 255 : v;
+            d[i] = d[i + 1] = d[i + 2] = v;
+          }
+
+          ctx.putImageData(imageData, 0, 0);
+          URL.revokeObjectURL(url);
+          resolve(canvas);
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+
+      img.src = url;
+    });
+  }
+
+  /**
+   * Extract best numeric reading from OCR text
+   */
+  function extractReading(text) {
+    if (!text) return '';
+
+    // Keep digits and dots only, then find number-like tokens
+    const cleaned = String(text).replace(/[^\d.]/g, ' ');
+    const matches = cleaned.match(/\d+(?:\.\d+)?/g);
+
+    if (!matches || !matches.length) return '';
+
+    // Prefer the longest token (usually the main reading)
+    matches.sort((a, b) => b.length - a.length || b.length - a.length);
+    let best = matches[0];
+
+    // Cap to 4 decimal places
+    if (best.includes('.')) {
+      const [whole, frac] = best.split('.');
+      best = whole + '.' + (frac || '').slice(0, 4);
+    }
+
+    // Drop leading zeros unless "0.xxx"
+    if (/^0\d+/.test(best) && !best.startsWith('0.')) {
+      best = String(parseFloat(best));
+    }
+
+    return best;
+  }
+
+  async function ensureWorker() {
+    if (ocrWorker) return ocrWorker;
+
+    if (typeof Tesseract === 'undefined') {
+      throw new Error('OCR library not loaded. Check internet on first use.');
+    }
+
+    showOcrOverlay('Preparing OCR', 'Downloading model (first time only)…');
+
+    ocrWorker = await Tesseract.createWorker('eng', 1, {
+      logger: (m) => {
+        if (m.status === 'loading tesseract core') {
+          showOcrOverlay('Preparing OCR', 'Loading engine…');
+        } else if (m.status === 'loading language traineddata') {
+          showOcrOverlay('Preparing OCR', 'Downloading language data…');
+        } else if (m.status === 'initializing api') {
+          showOcrOverlay('Preparing OCR', 'Initializing…');
+        } else if (m.status === 'recognizing text') {
+          const pct = m.progress != null
+            ? Math.round(m.progress * 100) + '%'
+            : '';
+          showOcrOverlay('Scanning', 'Reading digits… ' + pct);
+        }
+      }
+    });
+
+    await ocrWorker.setParameters({
+      tessedit_char_whitelist: '0123456789.',
+      preserve_interword_spaces: '0'
+    });
+
+    return ocrWorker;
+  }
+
+  window.startOcrScan = function () {
+    if (ocrBusy) return;
+    if (!window.app || app.state.view !== 'reading') return;
+
+    const input = document.getElementById('ocrFileInput');
+    if (!input) return;
+
+    input.value = '';
+    input.click();
+  };
+
+  window.handleOcrFile = async function (event) {
+    const file = event.target && event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (ocrBusy) return;
+    setScanBusy(true);
+
+    try {
+      showOcrOverlay('Processing', 'Enhancing image…');
+
+      const canvas = await preprocessImage(file);
+
+      const worker = await ensureWorker();
+
+      showOcrOverlay('Scanning', 'Reading meter digits…');
+
+      const result = await worker.recognize(canvas, {
+        rectangle: undefined
+      });
+
+      const raw = (result && result.data && result.data.text) || '';
+      const reading = extractReading(raw);
+
+      hideOcrOverlay();
+
+      if (!reading) {
+        alert(
+          '⚠️ Walang nakitang numero.\n\n' +
+          'Tips:\n' +
+          '• Mas malapit sa meter\n' +
+          '• Iwasan ang glare / reflection\n' +
+          '• I-focus ang digits lang'
+        );
+        return;
+      }
+
+      const c = document.getElementById('c');
+      if (!c) return;
+
+      c.value = reading;
+
+      // Trigger color feedback via existing keypad logic
+      if (typeof window.handleKey === 'function') {
+        // Re-run color check without adding a key
+        const p = document.getElementById('p');
+        const currentVal = parseFloat(c.value) || 0;
+        const prevVal = parseFloat(p && p.value) || 0;
+
+        const editingPrevious =
+          app.state.isSingleEdit &&
+          app.state.editField === 'previous';
+
+        if (editingPrevious) {
+          const eq = MOCK_EQUIPMENT[app.state.currentIndex];
+          const existingCurrent = parseFloat(
+            app.state.cloudReadings[eq.id]?.curr
+          ) || 0;
+
+          c.style.color =
+            currentVal > existingCurrent ? '#ef4444' : '#10b981';
+        } else if (currentVal < prevVal) {
+          c.style.color = '#ef4444';
+        } else if (currentVal > prevVal + 2000000) {
+          c.style.color = '#f59e0b';
+        } else {
+          c.style.color = '#10b981';
+        }
+      }
+
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+
+    } catch (err) {
+      console.error('OCR error:', err);
+      hideOcrOverlay();
+      alert(
+        '❌ OCR failed.\n\n' +
+        (err && err.message ? err.message : 'Unknown error') +
+        '\n\nUnang gamit: kailangan ng internet para i-download ang OCR model. Pagkatapos ay offline na.'
+      );
+    } finally {
+      setScanBusy(false);
+      const input = document.getElementById('ocrFileInput');
+      if (input) input.value = '';
     }
   };
 
