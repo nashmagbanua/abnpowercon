@@ -534,7 +534,7 @@
     }
 
     /* =========================================================
-       OCR / SCAN
+       OCR / SCAN + CAMERA GUIDE
        ========================================================= */
 
     .powercon-scan-btn {
@@ -570,10 +570,145 @@
       pointer-events: none;
     }
 
-    #ocrOverlay {
+    #ocrCameraModal {
       position: fixed;
       inset: 0;
       z-index: 100000;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #ocrCameraModal.hidden {
+      display: none !important;
+    }
+
+    #ocrVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .ocr-guide-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Dim outside the green box using box-shadow */
+    .ocr-guide-box {
+      width: min(88vw, 420px);
+      height: min(22vw, 110px);
+      min-height: 72px;
+      border: 3px solid #10b981;
+      border-radius: 12px;
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.55),
+        0 0 0 3px rgba(16, 185, 129, 0.35),
+        0 0 24px rgba(16, 185, 129, 0.45);
+      background: transparent;
+      position: relative;
+    }
+
+    .ocr-guide-box::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1px dashed rgba(52, 211, 153, 0.55);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .ocr-guide-label {
+      margin-top: 14px;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.92);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 90vw;
+      line-height: 1.3;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .ocr-camera-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      padding: 1rem 1rem 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+      pointer-events: none;
+    }
+
+    .ocr-camera-top button {
+      pointer-events: auto;
+    }
+
+    .ocr-camera-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      padding: 1rem 1.25rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+    }
+
+    .ocr-capture-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      border: 4px solid #fff;
+      background: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.35);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ocr-capture-btn:active {
+      transform: scale(0.94);
+      background: #059669;
+    }
+
+    .ocr-capture-btn:disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .ocr-hint {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    #ocrOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100001;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1123,7 +1258,50 @@
 
 
   <!-- =========================================================
-       OCR OVERLAY
+       OCR CAMERA (green guide box)
+       ========================================================= -->
+
+  <div id="ocrCameraModal" class="hidden">
+
+    <video id="ocrVideo" playsinline muted autoplay></video>
+
+    <div class="ocr-camera-top">
+      <button
+        type="button"
+        onclick="window.closeOcrCamera()"
+        class="px-4 py-2 rounded-xl bg-white/15 text-white text-[10px] font-black uppercase tracking-widest border border-white/20"
+      >
+        Cancel
+      </button>
+      <span class="text-white text-[10px] font-black uppercase tracking-widest opacity-80">
+        Align LCD
+      </span>
+      <span style="width:4.5rem"></span>
+    </div>
+
+    <div class="ocr-guide-layer">
+      <div id="ocrGuideBox" class="ocr-guide-box"></div>
+      <div class="ocr-guide-label">
+        I-align ang LCD ng meter sa green box
+      </div>
+    </div>
+
+    <div class="ocr-camera-bottom">
+      <div class="ocr-hint">Tap capture kapag klaro ang digits</div>
+      <button
+        type="button"
+        id="ocrCaptureBtn"
+        class="ocr-capture-btn"
+        onclick="window.captureOcrFrame()"
+        aria-label="Capture"
+      ></button>
+    </div>
+
+  </div>
+
+
+  <!-- =========================================================
+       OCR PROCESSING OVERLAY
        ========================================================= -->
 
   <div id="ocrOverlay" class="hidden">
@@ -1989,15 +2167,6 @@
           >
             📷 Scan Meter
           </button>
-
-          <input
-            type="file"
-            id="ocrFileInput"
-            accept="image/*"
-            capture="environment"
-            class="hidden"
-            onchange="window.handleOcrFile(event)"
-          >
 
 
           ${
@@ -4906,13 +5075,14 @@ const app =
 
 
 /* =========================================================
-   OCR — Scan meter digits (Tesseract.js, offline after cache)
+   OCR — Live camera + green guide box + Tesseract
    ========================================================= */
 
 (function setupOcr() {
 
   let ocrWorker = null;
   let ocrBusy = false;
+  let mediaStream = null;
 
   function showOcrOverlay(title, status) {
     const overlay = document.getElementById('ocrOverlay');
@@ -4932,86 +5102,119 @@ const app =
     ocrBusy = busy;
     const btn = document.getElementById('ocrScanBtn');
     if (btn) btn.disabled = !!busy;
+    const cap = document.getElementById('ocrCaptureBtn');
+    if (cap) cap.disabled = !!busy;
   }
 
-  /**
-   * Preprocess: grayscale + contrast boost for LCD / meter digits
-   */
-  function preprocessImage(file) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-
-      img.onload = () => {
-        try {
-          const maxW = 1280;
-          let w = img.naturalWidth || img.width;
-          let h = img.naturalHeight || img.height;
-
-          if (w > maxW) {
-            h = Math.round(h * (maxW / w));
-            w = maxW;
-          }
-
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-
-          const imageData = ctx.getImageData(0, 0, w, h);
-          const d = imageData.data;
-          const contrast = 1.45;
-          const intercept = 128 * (1 - contrast);
-
-          for (let i = 0; i < d.length; i += 4) {
-            const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-            let v = contrast * gray + intercept;
-            v = v < 0 ? 0 : v > 255 ? 255 : v;
-            d[i] = d[i + 1] = d[i + 2] = v;
-          }
-
-          ctx.putImageData(imageData, 0, 0);
-          URL.revokeObjectURL(url);
-          resolve(canvas);
-        } catch (err) {
-          URL.revokeObjectURL(url);
-          reject(err);
-        }
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Failed to load image'));
-      };
-
-      img.src = url;
-    });
+  function stopCamera() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
+    const video = document.getElementById('ocrVideo');
+    if (video) {
+      video.srcObject = null;
+    }
   }
 
+  window.closeOcrCamera = function () {
+    stopCamera();
+    const modal = document.getElementById('ocrCameraModal');
+    if (modal) modal.classList.add('hidden');
+  };
+
   /**
-   * Extract best numeric reading from OCR text
+   * Map green box (screen coords) → video pixel crop
+   * Handles object-fit: cover
    */
+  function cropGuideFromVideo(video, guideEl) {
+    const vRect = video.getBoundingClientRect();
+    const gRect = guideEl.getBoundingClientRect();
+
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) throw new Error('Camera not ready');
+
+    const dispW = vRect.width;
+    const dispH = vRect.height;
+
+    // object-fit: cover scale
+    const scale = Math.max(dispW / vw, dispH / vh);
+    const drawnW = vw * scale;
+    const drawnH = vh * scale;
+    const offsetX = (dispW - drawnW) / 2;
+    const offsetY = (dispH - drawnH) / 2;
+
+    // Guide relative to video element
+    const gx = gRect.left - vRect.left;
+    const gy = gRect.top - vRect.top;
+    const gw = gRect.width;
+    const gh = gRect.height;
+
+    // Map to source video pixels
+    let sx = (gx - offsetX) / scale;
+    let sy = (gy - offsetY) / scale;
+    let sw = gw / scale;
+    let sh = gh / scale;
+
+    // Clamp
+    sx = Math.max(0, Math.min(vw - 1, sx));
+    sy = Math.max(0, Math.min(vh - 1, sy));
+    sw = Math.max(1, Math.min(vw - sx, sw));
+    sh = Math.max(1, Math.min(vh - sy, sh));
+
+    // Slight expand for margins (helps digits near edges)
+    const padX = sw * 0.04;
+    const padY = sh * 0.12;
+    sx = Math.max(0, sx - padX);
+    sy = Math.max(0, sy - padY);
+    sw = Math.min(vw - sx, sw + padX * 2);
+    sh = Math.min(vh - sy, sh + padY * 2);
+
+    const canvas = document.createElement('canvas');
+    // Upscale small crops a bit for OCR
+    const outW = Math.max(Math.round(sw), 640);
+    const outH = Math.round(sh * (outW / sw));
+    canvas.width = outW;
+    canvas.height = outH;
+
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
+
+    // Grayscale + contrast
+    const imageData = ctx.getImageData(0, 0, outW, outH);
+    const d = imageData.data;
+    const contrast = 1.55;
+    const intercept = 128 * (1 - contrast);
+
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      let v = contrast * gray + intercept;
+      v = v < 0 ? 0 : v > 255 ? 255 : v;
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  }
+
   function extractReading(text) {
     if (!text) return '';
 
-    // Keep digits and dots only, then find number-like tokens
     const cleaned = String(text).replace(/[^\d.]/g, ' ');
     const matches = cleaned.match(/\d+(?:\.\d+)?/g);
-
     if (!matches || !matches.length) return '';
 
-    // Prefer the longest token (usually the main reading)
-    matches.sort((a, b) => b.length - a.length || b.length - a.length);
+    // Prefer longest (main kWh reading like 127487.452)
+    matches.sort((a, b) => b.length - a.length);
     let best = matches[0];
 
-    // Cap to 4 decimal places
     if (best.includes('.')) {
-      const [whole, frac] = best.split('.');
-      best = whole + '.' + (frac || '').slice(0, 4);
+      const parts = best.split('.');
+      best = parts[0] + '.' + (parts[1] || '').slice(0, 4);
     }
 
-    // Drop leading zeros unless "0.xxx"
     if (/^0\d+/.test(best) && !best.startsWith('0.')) {
       best = String(parseFloat(best));
     }
@@ -5023,7 +5226,7 @@ const app =
     if (ocrWorker) return ocrWorker;
 
     if (typeof Tesseract === 'undefined') {
-      throw new Error('OCR library not loaded. Check internet on first use.');
+      throw new Error('OCR library not loaded. Kailangan ng internet sa unang load.');
     }
 
     showOcrOverlay('Preparing OCR', 'Downloading model (first time only)…');
@@ -5053,37 +5256,100 @@ const app =
     return ocrWorker;
   }
 
-  window.startOcrScan = function () {
+  function applyReadingToInput(reading) {
+    const c = document.getElementById('c');
+    if (!c) return;
+
+    c.value = reading;
+
+    const p = document.getElementById('p');
+    const currentVal = parseFloat(c.value) || 0;
+    const prevVal = parseFloat(p && p.value) || 0;
+
+    const editingPrevious =
+      app.state.isSingleEdit &&
+      app.state.editField === 'previous';
+
+    if (editingPrevious) {
+      const eq = MOCK_EQUIPMENT[app.state.currentIndex];
+      const existingCurrent = parseFloat(
+        app.state.cloudReadings[eq.id]?.curr
+      ) || 0;
+      c.style.color =
+        currentVal > existingCurrent ? '#ef4444' : '#10b981';
+    } else if (currentVal < prevVal) {
+      c.style.color = '#ef4444';
+    } else if (currentVal > prevVal + 2000000) {
+      c.style.color = '#f59e0b';
+    } else {
+      c.style.color = '#10b981';
+    }
+
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  window.startOcrScan = async function () {
     if (ocrBusy) return;
     if (!window.app || app.state.view !== 'reading') return;
 
-    const input = document.getElementById('ocrFileInput');
-    if (!input) return;
+    const modal = document.getElementById('ocrCameraModal');
+    const video = document.getElementById('ocrVideo');
+    if (!modal || !video) return;
 
-    input.value = '';
-    input.click();
+    try {
+      // Prefer rear camera
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      alert(
+        '❌ Hindi ma-access ang camera.\n\n' +
+        'Payagan ang camera permission, o subukan ulit.'
+      );
+      return;
+    }
+
+    video.srcObject = mediaStream;
+    try {
+      await video.play();
+    } catch (_) { /* autoplay may need user gesture — already have it */ }
+
+    modal.classList.remove('hidden');
   };
 
-  window.handleOcrFile = async function (event) {
-    const file = event.target && event.target.files && event.target.files[0];
-    if (!file) return;
-
+  window.captureOcrFrame = async function () {
     if (ocrBusy) return;
+
+    const video = document.getElementById('ocrVideo');
+    const guide = document.getElementById('ocrGuideBox');
+    if (!video || !guide) return;
+
+    if (!video.videoWidth) {
+      alert('Camera not ready. Sandali lang.');
+      return;
+    }
+
     setScanBusy(true);
 
     try {
-      showOcrOverlay('Processing', 'Enhancing image…');
+      showOcrOverlay('Processing', 'Cropping LCD area…');
 
-      const canvas = await preprocessImage(file);
+      const canvas = cropGuideFromVideo(video, guide);
+
+      // Close camera ASAP to free resources
+      window.closeOcrCamera();
 
       const worker = await ensureWorker();
 
       showOcrOverlay('Scanning', 'Reading meter digits…');
 
-      const result = await worker.recognize(canvas, {
-        rectangle: undefined
-      });
-
+      const result = await worker.recognize(canvas);
       const raw = (result && result.data && result.data.text) || '';
       const reading = extractReading(raw);
 
@@ -5093,62 +5359,26 @@ const app =
         alert(
           '⚠️ Walang nakitang numero.\n\n' +
           'Tips:\n' +
-          '• Mas malapit sa meter\n' +
+          '• I-align ang LCD sa loob ng green box\n' +
           '• Iwasan ang glare / reflection\n' +
-          '• I-focus ang digits lang'
+          '• Mas malapit nang kaunti'
         );
         return;
       }
 
-      const c = document.getElementById('c');
-      if (!c) return;
-
-      c.value = reading;
-
-      // Trigger color feedback via existing keypad logic
-      if (typeof window.handleKey === 'function') {
-        // Re-run color check without adding a key
-        const p = document.getElementById('p');
-        const currentVal = parseFloat(c.value) || 0;
-        const prevVal = parseFloat(p && p.value) || 0;
-
-        const editingPrevious =
-          app.state.isSingleEdit &&
-          app.state.editField === 'previous';
-
-        if (editingPrevious) {
-          const eq = MOCK_EQUIPMENT[app.state.currentIndex];
-          const existingCurrent = parseFloat(
-            app.state.cloudReadings[eq.id]?.curr
-          ) || 0;
-
-          c.style.color =
-            currentVal > existingCurrent ? '#ef4444' : '#10b981';
-        } else if (currentVal < prevVal) {
-          c.style.color = '#ef4444';
-        } else if (currentVal > prevVal + 2000000) {
-          c.style.color = '#f59e0b';
-        } else {
-          c.style.color = '#10b981';
-        }
-      }
-
-      if (navigator.vibrate) {
-        navigator.vibrate(30);
-      }
+      applyReadingToInput(reading);
 
     } catch (err) {
       console.error('OCR error:', err);
       hideOcrOverlay();
+      window.closeOcrCamera();
       alert(
         '❌ OCR failed.\n\n' +
         (err && err.message ? err.message : 'Unknown error') +
-        '\n\nUnang gamit: kailangan ng internet para i-download ang OCR model. Pagkatapos ay offline na.'
+        '\n\nUnang gamit: kailangan ng internet para i-download ang OCR model.'
       );
     } finally {
       setScanBusy(false);
-      const input = document.getElementById('ocrFileInput');
-      if (input) input.value = '';
     }
   };
 
