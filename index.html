@@ -1189,7 +1189,7 @@
     </div>
     <div class="ocr-guide-layer">
       <div id="ocrGuideBox" class="ocr-guide-box"></div>
-      <div class="ocr-guide-label">I-align ang LCD ng meter sa green box</div>
+      <div class="ocr-guide-label">I-align ang NUMBER line (hal. 253620.162) sa green box</div>
     </div>
     <div class="ocr-camera-bottom">
       <div class="ocr-hint">Tap capture kapag klaro ang digits</div>
@@ -5069,54 +5069,173 @@ window.closeThanksModal = function () {
     if (m) m.classList.add('hidden');
   };
 
-  function cropGuide(video, guideEl) {
+  /**
+   * Map green box → video pixels, crop mainly the NUMBER line
+   * (lower ~58% of guide — skips "Total Energy" label on EDMI)
+   */
+  function getGuideCropRect(video, guideEl) {
     const vRect = video.getBoundingClientRect();
     const gRect = guideEl.getBoundingClientRect();
     const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh) throw new Error('Camera not ready');
+
     const scale = Math.max(vRect.width / vw, vRect.height / vh);
     const drawnW = vw * scale, drawnH = vh * scale;
     const offsetX = (vRect.width - drawnW) / 2;
     const offsetY = (vRect.height - drawnH) / 2;
+
     let sx = (gRect.left - vRect.left - offsetX) / scale;
     let sy = (gRect.top - vRect.top - offsetY) / scale;
     let sw = gRect.width / scale;
     let sh = gRect.height / scale;
-    const padX = sw * 0.04, padY = sh * 0.12;
+
+    // Focus on lower portion (digits line on EDMI LCD)
+    const topSkip = sh * 0.38;
+    sy += topSkip;
+    sh -= topSkip;
+
+    const padX = sw * 0.03;
+    const padY = sh * 0.08;
     sx = Math.max(0, sx - padX);
     sy = Math.max(0, sy - padY);
     sw = Math.min(vw - sx, sw + padX * 2);
     sh = Math.min(vh - sy, sh + padY * 2);
-    const outW = Math.max(Math.round(sw), 640);
-    const outH = Math.round(sh * (outW / sw));
-    const canvas = document.createElement('canvas');
-    canvas.width = outW; canvas.height = outH;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
-    const imageData = ctx.getImageData(0, 0, outW, outH);
-    const d = imageData.data;
-    const contrast = 1.55, intercept = 128 * (1 - contrast);
-    for (let i = 0; i < d.length; i += 4) {
-      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      let v = contrast * gray + intercept;
-      v = v < 0 ? 0 : v > 255 ? 255 : v;
-      d[i] = d[i + 1] = d[i + 2] = v;
+
+    return { sx, sy, sw, sh, vw, vh };
+  }
+
+  /**
+   * LCD-optimized preprocess variants for EDMI-style green displays.
+   * Returns array of canvases: binary-inverted, binary, high-contrast gray.
+   */
+  function buildLcdCanvases(video, guideEl) {
+    const { sx, sy, sw, sh } = getGuideCropRect(video, guideEl);
+
+    const outW = Math.max(Math.round(sw * 1.5), 720);
+    const outH = Math.max(Math.round(sh * (outW / sw)), 80);
+
+    // Source crop
+    const src = document.createElement('canvas');
+    src.width = outW;
+    src.height = outH;
+    const sctx = src.getContext('2d');
+    sctx.imageSmoothingEnabled = true;
+    sctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
+
+    const srcData = sctx.getImageData(0, 0, outW, outH);
+    const srcPx = srcData.data;
+    const n = outW * outH;
+    const gray = new Float32Array(n);
+
+    // Grayscale (emphasize green channel — EDMI LCD is green)
+    let sum = 0;
+    for (let i = 0, p = 0; i < srcPx.length; i += 4, p++) {
+      const g = 0.15 * srcPx[i] + 0.70 * srcPx[i + 1] + 0.15 * srcPx[i + 2];
+      gray[p] = g;
+      sum += g;
     }
-    ctx.putImageData(imageData, 0, 0);
-    return canvas;
+    const mean = sum / n;
+
+    // Otsu-like threshold on histogram
+    const hist = new Array(256).fill(0);
+    for (let p = 0; p < n; p++) {
+      hist[Math.max(0, Math.min(255, gray[p] | 0))]++;
+    }
+    let total = n;
+    let sumAll = 0;
+    for (let t = 0; t < 256; t++) sumAll += t * hist[t];
+    let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t];
+      if (!wB) continue;
+      const wF = total - wB;
+      if (!wF) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB;
+      const mF = (sumAll - sumB) / wF;
+      const v = wB * wF * (mB - mF) * (mB - mF);
+      if (v > maxVar) { maxVar = v; threshold = t; }
+    }
+
+    function makeCanvas(mode) {
+      const c = document.createElement('canvas');
+      c.width = outW;
+      c.height = outH;
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(outW, outH);
+      const d = img.data;
+
+      for (let p = 0, i = 0; p < n; p++, i += 4) {
+        let v = gray[p];
+
+        // Contrast stretch
+        v = (v - mean) * 1.85 + 128;
+        v = v < 0 ? 0 : v > 255 ? 255 : v;
+
+        if (mode === 'binary' || mode === 'binary_inv') {
+          v = v > threshold ? 255 : 0;
+          if (mode === 'binary_inv') v = 255 - v;
+        } else if (mode === 'invert_gray') {
+          v = 255 - v;
+        }
+
+        d[i] = d[i + 1] = d[i + 2] = v;
+        d[i + 3] = 255;
+      }
+
+      ctx.putImageData(img, 0, 0);
+      return c;
+    }
+
+    // Order: inverted binary often best for green LCD (dark digits on white)
+    return [
+      makeCanvas('binary_inv'),
+      makeCanvas('binary'),
+      makeCanvas('invert_gray'),
+      makeCanvas('gray')
+    ];
   }
 
   function extractReading(text) {
     if (!text) return '';
-    const matches = String(text).replace(/[^\d.]/g, ' ').match(/\d+(?:\.\d+)?/g);
+
+    // Normalize common LCD misreads before digit extract
+    let t = String(text)
+      .replace(/[Oo]/g]/g, '0')
+      .replace(/[Il|]/g, '1')
+      .replace(/[Ss]/g, '5')
+      .replace(/[Bb]/g, '8')
+      .replace(/,/g, '.')
+      .replace(/[^\d.]/g, ' ');
+
+    const matches = t.match(/\d+(?:\.\d+)?/g);
     if (!matches || !matches.length) return '';
-    matches.sort((a, b) => b.length - a.length);
+
+    // Prefer longest; if tie, prefer one with decimal (kWh style)
+    matches.sort((a, b) => {
+      const dec = (x) => (x.includes('.') ? 1 : 0);
+      return (b.length - a.length) || (dec(b) - dec(a));
+    });
+
     let best = matches[0];
     if (best.includes('.')) {
       const p = best.split('.');
       best = p[0] + '.' + (p[1] || '').slice(0, 4);
     }
+
+    // Reject tiny garbage
+    if (best.replace('.', '').length < 3) return '';
+
     return best;
+  }
+
+  function scoreReading(reading, confidence) {
+    if (!reading) return -1;
+    const digits = reading.replace('.', '').length;
+    const hasDec = reading.includes('.') ? 8 : 0;
+    // EDMI total energy often 6+ digits before decimal
+    const lengthBonus = Math.min(digits, 10) * 2;
+    return (confidence || 0) + lengthBonus + hasDec;
   }
 
   async function ensureWorker() {
@@ -5127,13 +5246,15 @@ window.closeThanksModal = function () {
       logger: (m) => {
         if (m.status === 'recognizing text') {
           const pct = m.progress != null ? Math.round(m.progress * 100) + '%' : '';
-          showOcr('Scanning', 'Reading digits… ' + pct);
+          showOcr('Scanning', 'Reading LCD digits… ' + pct);
         }
       }
     });
     await ocrWorker.setParameters({
       tessedit_char_whitelist: '0123456789.',
-      preserve_interword_spaces: '0'
+      preserve_interword_spaces: '0',
+      // Single text line — best for meter number row
+      tessedit_pageseg_mode: '7'
     });
     return ocrWorker;
   }
@@ -5180,19 +5301,50 @@ window.closeThanksModal = function () {
     }
     setBusy(true);
     try {
-      showOcr('Processing', 'Cropping LCD area…');
-      const canvas = cropGuide(video, guide);
+      showOcr('Processing', 'LCD enhance + crop…');
+      const canvases = buildLcdCanvases(video, guide);
       window.closeOcrCamera();
+
       const worker = await ensureWorker();
-      showOcr('Scanning', 'Reading meter digits…');
-      const result = await worker.recognize(canvas);
-      const reading = extractReading((result && result.data && result.data.text) || '');
+
+      let bestReading = '';
+      let bestScore = -1;
+
+      for (let i = 0; i < canvases.length; i++) {
+        showOcr('Scanning', 'LCD pass ' + (i + 1) + '/' + canvases.length + '…');
+        try {
+          const result = await worker.recognize(canvases[i]);
+          const raw = (result && result.data && result.data.text) || '';
+          const conf = (result && result.data && result.data.confidence) || 0;
+          const reading = extractReading(raw);
+          const score = scoreReading(reading, conf);
+          if (score > bestScore) {
+            bestScore = score;
+            bestReading = reading;
+          }
+          // Good enough: long number with decimal
+          if (reading && reading.includes('.') && reading.replace('.', '').length >= 6 && conf >= 55) {
+            break;
+          }
+        } catch (passErr) {
+          console.warn('OCR pass failed', i, passErr);
+        }
+      }
+
       hideOcr();
-      if (!reading) {
-        alert('⚠️ Walang nakitang numero.\n\nI-align ang LCD sa green box at iwasan ang glare.');
+
+      if (!bestReading) {
+        alert(
+          '⚠️ Walang nakitang numero.\n\n' +
+          'Tips para sa EDMI LCD:\n' +
+          '• Green box sa NUMBER line lang (253620.162)\n' +
+          '• Iwasan ang glare sa glass\n' +
+          '• Mas malapit nang kaunti'
+        );
         return;
       }
-      applyReading(reading);
+
+      applyReading(bestReading);
     } catch (err) {
       console.error(err);
       hideOcr();
