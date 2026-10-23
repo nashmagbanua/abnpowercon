@@ -5069,125 +5069,138 @@ window.closeThanksModal = function () {
     if (m) m.classList.add('hidden');
   };
 
-  /**
-   * Map green box → video pixels, crop mainly the NUMBER line
-   * (lower ~58% of guide — skips "Total Energy" label on EDMI)
-   */
   function getGuideCropRect(video, guideEl) {
-    const vRect = video.getBoundingClientRect();
-    const gRect = guideEl.getBoundingClientRect();
-    const vw = video.videoWidth, vh = video.videoHeight;
+    var vRect = video.getBoundingClientRect();
+    var gRect = guideEl.getBoundingClientRect();
+    var vw = video.videoWidth;
+    var vh = video.videoHeight;
     if (!vw || !vh) throw new Error('Camera not ready');
 
-    const scale = Math.max(vRect.width / vw, vRect.height / vh);
-    const drawnW = vw * scale, drawnH = vh * scale;
-    const offsetX = (vRect.width - drawnW) / 2;
-    const offsetY = (vRect.height - drawnH) / 2;
+    var scale = Math.max(vRect.width / vw, vRect.height / vh);
+    var drawnW = vw * scale;
+    var drawnH = vh * scale;
+    var offsetX = (vRect.width - drawnW) / 2;
+    var offsetY = (vRect.height - drawnH) / 2;
 
-    let sx = (gRect.left - vRect.left - offsetX) / scale;
-    let sy = (gRect.top - vRect.top - offsetY) / scale;
-    let sw = gRect.width / scale;
-    let sh = gRect.height / scale;
+    var sx = (gRect.left - vRect.left - offsetX) / scale;
+    var sy = (gRect.top - vRect.top - offsetY) / scale;
+    var sw = gRect.width / scale;
+    var sh = gRect.height / scale;
 
-    // Focus on lower portion (digits line on EDMI LCD)
-    const topSkip = sh * 0.38;
-    sy += topSkip;
-    sh -= topSkip;
+    // Focus on lower part of guide (number line, skip "Total Energy")
+    var topSkip = sh * 0.38;
+    sy = sy + topSkip;
+    sh = sh - topSkip;
 
-    const padX = sw * 0.03;
-    const padY = sh * 0.08;
+    var padX = sw * 0.03;
+    var padY = sh * 0.08;
     sx = Math.max(0, sx - padX);
     sy = Math.max(0, sy - padY);
     sw = Math.min(vw - sx, sw + padX * 2);
     sh = Math.min(vh - sy, sh + padY * 2);
 
-    return { sx, sy, sw, sh, vw, vh };
+    return { sx: sx, sy: sy, sw: sw, sh: sh };
   }
 
-  /**
-   * LCD-optimized preprocess variants for EDMI-style green displays.
-   * Returns array of canvases: binary-inverted, binary, high-contrast gray.
-   */
+  function clampByte(v) {
+    if (v < 0) return 0;
+    if (v > 255) return 255;
+    return v;
+  }
+
   function buildLcdCanvases(video, guideEl) {
-    const { sx, sy, sw, sh } = getGuideCropRect(video, guideEl);
+    var rect = getGuideCropRect(video, guideEl);
+    var sx = rect.sx;
+    var sy = rect.sy;
+    var sw = rect.sw;
+    var sh = rect.sh;
 
-    const outW = Math.max(Math.round(sw * 1.5), 720);
-    const outH = Math.max(Math.round(sh * (outW / sw)), 80);
+    var outW = Math.max(Math.round(sw * 1.5), 720);
+    var outH = Math.max(Math.round(sh * (outW / sw)), 80);
 
-    // Source crop
-    const src = document.createElement('canvas');
+    var src = document.createElement('canvas');
     src.width = outW;
     src.height = outH;
-    const sctx = src.getContext('2d');
+    var sctx = src.getContext('2d');
     sctx.imageSmoothingEnabled = true;
     sctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
 
-    const srcData = sctx.getImageData(0, 0, outW, outH);
-    const srcPx = srcData.data;
-    const n = outW * outH;
-    const gray = new Float32Array(n);
+    var srcData = sctx.getImageData(0, 0, outW, outH);
+    var srcPx = srcData.data;
+    var n = outW * outH;
+    var gray = new Float32Array(n);
+    var sum = 0;
+    var p;
+    var i;
 
-    // Grayscale (emphasize green channel — EDMI LCD is green)
-    let sum = 0;
-    for (let i = 0, p = 0; i < srcPx.length; i += 4, p++) {
-      const g = 0.15 * srcPx[i] + 0.70 * srcPx[i + 1] + 0.15 * srcPx[i + 2];
+    // Emphasize green channel for EDMI LCD
+    for (i = 0, p = 0; i < srcPx.length; i += 4, p++) {
+      var g = 0.15 * srcPx[i] + 0.70 * srcPx[i + 1] + 0.15 * srcPx[i + 2];
       gray[p] = g;
       sum += g;
     }
-    const mean = sum / n;
+    var mean = sum / n;
 
-    // Otsu-like threshold on histogram
-    const hist = new Array(256).fill(0);
-    for (let p = 0; p < n; p++) {
-      hist[Math.max(0, Math.min(255, gray[p] | 0))]++;
+    // Histogram for Otsu threshold
+    var hist = [];
+    for (i = 0; i < 256; i++) hist[i] = 0;
+    for (p = 0; p < n; p++) {
+      var bin = gray[p] | 0;
+      if (bin < 0) bin = 0;
+      if (bin > 255) bin = 255;
+      hist[bin]++;
     }
-    let total = n;
-    let sumAll = 0;
-    for (let t = 0; t < 256; t++) sumAll += t * hist[t];
-    let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
-    for (let t = 0; t < 256; t++) {
-      wB += hist[t];
+
+    var sumAll = 0;
+    for (i = 0; i < 256; i++) sumAll += i * hist[i];
+    var sumB = 0;
+    var wB = 0;
+    var maxVar = 0;
+    var threshold = 128;
+    for (i = 0; i < 256; i++) {
+      wB += hist[i];
       if (!wB) continue;
-      const wF = total - wB;
+      var wF = n - wB;
       if (!wF) break;
-      sumB += t * hist[t];
-      const mB = sumB / wB;
-      const mF = (sumAll - sumB) / wF;
-      const v = wB * wF * (mB - mF) * (mB - mF);
-      if (v > maxVar) { maxVar = v; threshold = t; }
+      sumB += i * hist[i];
+      var mB = sumB / wB;
+      var mF = (sumAll - sumB) / wF;
+      var diff = mB - mF;
+      var v = wB * wF * diff * diff;
+      if (v > maxVar) {
+        maxVar = v;
+        threshold = i;
+      }
     }
 
     function makeCanvas(mode) {
-      const c = document.createElement('canvas');
+      var c = document.createElement('canvas');
       c.width = outW;
       c.height = outH;
-      const ctx = c.getContext('2d');
-      const img = ctx.createImageData(outW, outH);
-      const d = img.data;
-
-      for (let p = 0, i = 0; p < n; p++, i += 4) {
-        let v = gray[p];
-
-        // Contrast stretch
-        v = (v - mean) * 1.85 + 128;
-        v = v < 0 ? 0 : v > 255 ? 255 : v;
+      var ctx = c.getContext('2d');
+      var img = ctx.createImageData(outW, outH);
+      var d = img.data;
+      for (p = 0, i = 0; p < n; p++, i += 4) {
+        var val = gray[p];
+        val = (val - mean) * 1.85 + 128;
+        val = clampByte(val);
 
         if (mode === 'binary' || mode === 'binary_inv') {
-          v = v > threshold ? 255 : 0;
-          if (mode === 'binary_inv') v = 255 - v;
+          val = val > threshold ? 255 : 0;
+          if (mode === 'binary_inv') val = 255 - val;
         } else if (mode === 'invert_gray') {
-          v = 255 - v;
+          val = 255 - val;
         }
 
-        d[i] = d[i + 1] = d[i + 2] = v;
+        d[i] = val;
+        d[i + 1] = val;
+        d[i + 2] = val;
         d[i + 3] = 255;
       }
-
       ctx.putImageData(img, 0, 0);
       return c;
     }
 
-    // Order: inverted binary often best for green LCD (dark digits on white)
     return [
       makeCanvas('binary_inv'),
       makeCanvas('binary'),
@@ -5199,61 +5212,56 @@ window.closeThanksModal = function () {
   function extractReading(text) {
     if (!text) return '';
 
-    // Normalize common LCD misreads before digit extract
-    let t = String(text)
-      .replace(/[Oo]/g]/g, '0')
-      .replace(/[Il|]/g, '1')
-      .replace(/[Ss]/g, '5')
-      .replace(/[Bb]/g, '8')
-      .replace(/,/g, '.')
-      .replace(/[^\d.]/g, ' ');
+    var t = String(text);
+    t = t.replace(/O/gi, '0');
+    t = t.replace(/[Il]/g, '1');
+    t = t.replace(/S/gi, '5');
+    t = t.replace(/B/g, '8');
+    t = t.replace(/,/g, '.');
+    t = t.replace(/[^\d.]/g, ' ');
 
-    const matches = t.match(/\d+(?:\.\d+)?/g);
+    var matches = t.match(/\d+(?:\.\d+)?/g);
     if (!matches || !matches.length) return '';
 
-    // Prefer longest; if tie, prefer one with decimal (kWh style)
-    matches.sort((a, b) => {
-      const dec = (x) => (x.includes('.') ? 1 : 0);
-      return (b.length - a.length) || (dec(b) - dec(a));
+    matches.sort(function (a, b) {
+      var decA = a.indexOf('.') >= 0 ? 1 : 0;
+      var decB = b.indexOf('.') >= 0 ? 1 : 0;
+      return (b.length - a.length) || (decB - decA);
     });
 
-    let best = matches[0];
-    if (best.includes('.')) {
-      const p = best.split('.');
-      best = p[0] + '.' + (p[1] || '').slice(0, 4);
+    var best = matches[0];
+    if (best.indexOf('.') >= 0) {
+      var parts = best.split('.');
+      best = parts[0] + '.' + (parts[1] || '').slice(0, 4);
     }
 
-    // Reject tiny garbage
     if (best.replace('.', '').length < 3) return '';
-
     return best;
   }
 
   function scoreReading(reading, confidence) {
     if (!reading) return -1;
-    const digits = reading.replace('.', '').length;
-    const hasDec = reading.includes('.') ? 8 : 0;
-    // EDMI total energy often 6+ digits before decimal
-    const lengthBonus = Math.min(digits, 10) * 2;
+    var digits = reading.replace('.', '').length;
+    var hasDec = reading.indexOf('.') >= 0 ? 8 : 0;
+    var lengthBonus = Math.min(digits, 10) * 2;
     return (confidence || 0) + lengthBonus + hasDec;
   }
 
   async function ensureWorker() {
     if (ocrWorker) return ocrWorker;
     if (typeof Tesseract === 'undefined') throw new Error('OCR library not loaded');
-    showOcr('Preparing OCR', 'Downloading model (first time only)…');
+    showOcr('Preparing OCR', 'Downloading model (first time only)...');
     ocrWorker = await Tesseract.createWorker('eng', 1, {
-      logger: (m) => {
+      logger: function (m) {
         if (m.status === 'recognizing text') {
-          const pct = m.progress != null ? Math.round(m.progress * 100) + '%' : '';
-          showOcr('Scanning', 'Reading LCD digits… ' + pct);
+          var pct = m.progress != null ? Math.round(m.progress * 100) + '%' : '';
+          showOcr('Scanning', 'Reading LCD digits... ' + pct);
         }
       }
     });
     await ocrWorker.setParameters({
       tessedit_char_whitelist: '0123456789.',
       preserve_interword_spaces: '0',
-      // Single text line — best for meter number row
       tessedit_pageseg_mode: '7'
     });
     return ocrWorker;
@@ -5293,37 +5301,41 @@ window.closeThanksModal = function () {
 
   window.captureOcrFrame = async function () {
     if (ocrBusy) return;
-    const video = document.getElementById('ocrVideo');
-    const guide = document.getElementById('ocrGuideBox');
+    var video = document.getElementById('ocrVideo');
+    var guide = document.getElementById('ocrGuideBox');
     if (!video || !guide || !video.videoWidth) {
       alert('Camera not ready. Sandali lang.');
       return;
     }
     setBusy(true);
     try {
-      showOcr('Processing', 'LCD enhance + crop…');
-      const canvases = buildLcdCanvases(video, guide);
+      showOcr('Processing', 'LCD enhance + crop...');
+      var canvases = buildLcdCanvases(video, guide);
       window.closeOcrCamera();
 
-      const worker = await ensureWorker();
+      var worker = await ensureWorker();
+      var bestReading = '';
+      var bestScore = -1;
+      var i;
 
-      let bestReading = '';
-      let bestScore = -1;
-
-      for (let i = 0; i < canvases.length; i++) {
-        showOcr('Scanning', 'LCD pass ' + (i + 1) + '/' + canvases.length + '…');
+      for (i = 0; i < canvases.length; i++) {
+        showOcr('Scanning', 'LCD pass ' + (i + 1) + '/' + canvases.length + '...');
         try {
-          const result = await worker.recognize(canvases[i]);
-          const raw = (result && result.data && result.data.text) || '';
-          const conf = (result && result.data && result.data.confidence) || 0;
-          const reading = extractReading(raw);
-          const score = scoreReading(reading, conf);
+          var result = await worker.recognize(canvases[i]);
+          var raw = (result && result.data && result.data.text) || '';
+          var conf = (result && result.data && result.data.confidence) || 0;
+          var reading = extractReading(raw);
+          var score = scoreReading(reading, conf);
           if (score > bestScore) {
             bestScore = score;
             bestReading = reading;
           }
-          // Good enough: long number with decimal
-          if (reading && reading.includes('.') && reading.replace('.', '').length >= 6 && conf >= 55) {
+          if (
+            reading &&
+            reading.indexOf('.') >= 0 &&
+            reading.replace('.', '').length >= 6 &&
+            conf >= 55
+          ) {
             break;
           }
         } catch (passErr) {
@@ -5335,11 +5347,11 @@ window.closeThanksModal = function () {
 
       if (!bestReading) {
         alert(
-          '⚠️ Walang nakitang numero.\n\n' +
+          'Walang nakitang numero.\n\n' +
           'Tips para sa EDMI LCD:\n' +
-          '• Green box sa NUMBER line lang (253620.162)\n' +
-          '• Iwasan ang glare sa glass\n' +
-          '• Mas malapit nang kaunti'
+          '- Green box sa NUMBER line lang\n' +
+          '- Iwasan ang glare\n' +
+          '- Mas malapit nang kaunti'
         );
         return;
       }
@@ -5349,7 +5361,7 @@ window.closeThanksModal = function () {
       console.error(err);
       hideOcr();
       window.closeOcrCamera();
-      alert('❌ OCR failed.\n\n' + (err && err.message ? err.message : 'Unknown error'));
+      alert('OCR failed.\n\n' + (err && err.message ? err.message : 'Unknown error'));
     } finally {
       setBusy(false);
     }
